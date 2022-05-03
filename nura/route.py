@@ -9,6 +9,13 @@ def index():
 def login():
     form = LoginForm(csrf_enabled=False)
     if form.is_submitted():
+        u = Sysuser.query.filter_by(userName=form.username.data).first()
+        if u is None:
+            print('Invalid User Name')
+            return redirect(url_for('login'))
+        if u.check_password(form.password.data):
+            print('Invalid Password')
+            return redirect(url_for('login'))
         msg = "username={}, password={}, remember_me={}".format(
             form.username.data,
             form.password.data,
