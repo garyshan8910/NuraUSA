@@ -1,7 +1,8 @@
 from flask import render_template, redirect, url_for, request
 from flask_login import login_user, current_user, logout_user, login_required
-from nura.forms import LoginForm
+from nura.forms import LoginForm, RegisterForm
 from nura.models import Sysuser
+from nura import db
 
 # 这里加装饰器，就会要求用户要登陆才能访问这个页面
 @login_required
@@ -20,7 +21,7 @@ def index():
             'body': "hi I'm test1!"            
         }      
     ]
-    return render_template('index.html', posts=posts)
+    return render_template('index.html')
 
 
 def login():
@@ -51,3 +52,16 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for('login'))
+
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    form = RegisterForm()
+    if form.validate_on_submit():
+        user = Sysuser(userName=form.username.data, email=form.email.data)
+        user.set_password(form.password.data)
+        user.activeFlag = 1
+        db.session.add(user)
+        db.session.commit()
+        return redirect(url_for('login'))
+    return render_template('register.html', title='Registration', form=form)
