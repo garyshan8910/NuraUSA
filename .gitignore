@@ -1,3 +1,4 @@
 # Ignore virtual environment
 nura_code/
+__pycache__/
 nura/__pycache__/
