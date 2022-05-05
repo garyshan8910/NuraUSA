@@ -65,3 +65,15 @@ def register():
         db.session.commit()
         return redirect(url_for('login'))
     return render_template('register.html', title='Registration', form=form)
+
+@login_required
+def so_po_mapping():
+    return render_template('sopomapping.html')
+
+@login_required
+def so_details():
+    return render_template('sodetails.html')
+
+@login_required
+def po_details():
+    return render_template('podetails.html')
