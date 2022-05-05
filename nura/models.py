@@ -1,7 +1,8 @@
 import hashlib
-from nura import db
+from nura import db, login_manager
+from flask_login import UserMixin
 
-class Sysuser(db.Model):
+class Sysuser(UserMixin, db.Model):
     __tablename__ = 'sysuser'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -31,3 +32,8 @@ class Sysuser(db.Model):
 
     def check_password(self, password):
         return self.userPwd == self.compute_md5_hash(password)
+
+#获取用户是否登陆信息
+@login_manager.user_loader
+def lode_user(id):
+    return Sysuser.query.get(int(id))

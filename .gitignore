@@ -1,5 +1,6 @@
 # Ignore virtual environment
 nura_code/
+__pycache__/
 nura/__pycache__/
 mysql_notes.md
 nura/config.py
