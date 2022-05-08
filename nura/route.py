@@ -1,7 +1,7 @@
 from flask import render_template, redirect, url_for, request
 from flask_login import login_user, current_user, logout_user, login_required
 from nura.forms import LoginForm, RegisterForm
-from nura.models import Sysuser
+from nura.models import Sysuser, So, Po
 from nura import db
 
 # 这里加装饰器，就会要求用户要登陆才能访问这个页面
@@ -72,8 +72,10 @@ def so_po_mapping():
 
 @login_required
 def so_details():
-    return render_template('sodetails.html')
+    so_details = So.query
+    return render_template('sodetails.html', so_details=so_details)
 
 @login_required
 def po_details():
-    return render_template('podetails.html')
+    po_details = Po.query
+    return render_template('podetails.html', po_details=po_details)

@@ -4,6 +4,37 @@
 <div class="d-flex align-items-center justify-content-center h-100">
     <div class="d-flex flex-column">
         <h1>PO Details</h1>
+        <table id="data" class="table table-striped">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Buyer</th>
+                <th>Vendor Contact</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for po_detail in po_details %}
+                <tr>
+                  <td>{{ po_detail.id }}</td>
+                  <td>{{ po_detail.buyer }}</td>
+                  <td>{{ po_detail.vendorContact }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    $(document).ready(function () {
+      $('#data').DataTable({
+        columns: [
+          {searchable: false},
+          null,
+          null],
+      });
+    });
+  </script>
 {% endblock %}

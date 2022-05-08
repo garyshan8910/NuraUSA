@@ -4,6 +4,43 @@
 <div class="d-flex align-items-center justify-content-center h-100">
     <div class="d-flex flex-column">
         <h1>SO Details</h1>
+        <table id="data" class="table table-striped">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Customer Contact</th>
+                <th>Sales Name</th>
+                <th>Cost</th>
+                <th>Total Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for so_detail in so_details %}
+                <tr>
+                  <td>{{ so_detail.id }}</td>
+                  <td>{{ so_detail.customerContact }}</td>
+                  <td>{{ so_detail.salesman }}</td>
+                  <td>{{ so_detail.cost }}</td>
+                  <td>{{ so_detail.totalPrice }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    $(document).ready(function () {
+      $('#data').DataTable({
+        columns: [
+          {searchable: false},
+          null,
+          null,
+          {orderable: false, searchable: false},
+          {orderable: false, searchable: false}],
+      });
+    });
+  </script>
 {% endblock %}
