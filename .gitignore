@@ -4,3 +4,5 @@ __pycache__/
 nura/__pycache__/
 mysql_notes.md
 nura/config.py
+nura/sql_script.md
+remark
