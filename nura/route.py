@@ -9,20 +9,6 @@ from nura import db
 
 @login_required
 def index():
-    posts = [
-        {
-            'author': {'username': 'root'},
-            'body': "hi I'm root!"
-        },
-        {
-            'author': {'username': 'test'},
-            'body': "hi I'm test!"
-        },
-        {
-            'author': {'username': 'test1'},
-            'body': "hi I'm test1!"
-        }
-    ]
     return render_template('index.html')
 
 

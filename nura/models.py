@@ -61,11 +61,9 @@ class Sysuser(UserMixin, db.Model):
         return self.userPwd == self.compute_md5_hash(password)
 
 # 获取用户是否登陆信息
-
-
 @login_manager.user_loader
 def lode_user(id):
-    return Sysuser.query.get(int(id))
+    return AssistUser.query.get(int(id))
 
 
 class Account(db.Model):
