@@ -1,46 +1,56 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="d-flex align-items-center justify-content-center h-100">
-    <div class="d-flex flex-column">
-        <h1>SO Details</h1>
-        <table id="data" class="table table-striped">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Customer Contact</th>
-                <th>Sales Name</th>
-                <th>Cost</th>
-                <th>Total Price</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for so_detail in so_details %}
-                <tr>
-                  <td>{{ so_detail.id }}</td>
-                  <td>{{ so_detail.customerContact }}</td>
-                  <td>{{ so_detail.salesman }}</td>
-                  <td>{{ so_detail.cost }}</td>
-                  <td>{{ so_detail.totalPrice }}</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-        </table>
+
+<div class="container justify-content-center">
+  <form action="" method="post">
+    <div class="row">
+      <div class="col">
+        {{ so_form.num.label}}
+        <input type="text" class="form-control" name="num" placeholder="" value="{{ request.form['num'] }}">
+      </div>
+      <div><button type="submit">Search</button></div>
     </div>
+  </form>
+  <div class="row">
+    <h1>SO Details</h1>
+    <table id="data" class="table table-striped">
+      <thead>
+        <tr>
+          <th>SO Number</th>
+          <th>Customer Contact</th>
+          <th>Sales Name</th>
+          <th>Cost</th>
+          <th>Total Price</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for so_detail in so_details %}
+        <tr>
+          <td>{{ so_detail.num }}</td>
+          <td>{{ so_detail.customerContact }}</td>
+          <td>{{ so_detail.salesman }}</td>
+          <td>{{ so_detail.cost }}</td>
+          <td>{{ so_detail.totalPrice }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-  <script>
-    $(document).ready(function () {
-      $('#data').DataTable({
-        columns: [
-          {searchable: false},
-          null,
-          null,
-          {orderable: false, searchable: false},
-          {orderable: false, searchable: false}],
-      });
+<script>
+  $(document).ready(function () {
+    $('#data').DataTable({
+      columns: [
+        { searchable: true },
+        null,
+        null,
+        { orderable: true, searchable: true },
+        { orderable: true, searchable: true }],
     });
-  </script>
+  });
+</script>
 {% endblock %}

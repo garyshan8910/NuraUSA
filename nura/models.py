@@ -2,6 +2,33 @@ import hashlib
 from nura import db, login_manager
 from flask_login import UserMixin
 
+
+class AssistUser(UserMixin, db.Model):
+    __tablename__ = 'assist_user'
+
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(255), nullable=False)
+    password = db.Column(db.String(255), nullable=False)
+    email = db.Column(db.String(255))
+    active = db.Column(db.Integer, nullable=False)
+
+    def __repr__(self):
+        return 'id = {}, username = {}, password = {}'.format(
+            self.id,  self.username, self.password
+        )
+
+    def compute_md5_hash(self, password):
+        m = hashlib.md5()
+        m.update(password.encode('utf-8'))
+        return m.hexdigest()
+
+    def set_password(self, password):
+        self.password = self.compute_md5_hash(password)
+
+    def check_password(self, password):
+        return self.password == self.compute_md5_hash(password)
+
+
 class Sysuser(UserMixin, db.Model):
     __tablename__ = 'sysuser'
 
@@ -26,17 +53,20 @@ class Sysuser(UserMixin, db.Model):
         m = hashlib.md5()
         m.update(password.encode('utf-8'))
         return m.hexdigest()
-    
+
     def set_password(self, password):
         self.userPwd = self.compute_md5_hash(password)
 
     def check_password(self, password):
         return self.userPwd == self.compute_md5_hash(password)
 
-#获取用户是否登陆信息
+# 获取用户是否登陆信息
+
+
 @login_manager.user_loader
 def lode_user(id):
     return Sysuser.query.get(int(id))
+
 
 class Account(db.Model):
     __tablename__ = 'account'
@@ -45,13 +75,11 @@ class Account(db.Model):
     typeId = db.Column(db.Integer, index=True)
 
 
-
 class Accounttype(db.Model):
     __tablename__ = 'accounttype'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(15), nullable=False, unique=True)
-
 
 
 class Asaccount(db.Model):
@@ -68,13 +96,11 @@ class Asaccount(db.Model):
     typeId = db.Column(db.Integer, index=True)
 
 
-
 class Asaccounttype(db.Model):
     __tablename__ = 'asaccounttype'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(31), nullable=False, unique=True)
-
 
 
 class Calcategory(db.Model):
@@ -93,7 +119,6 @@ class Calcategory(db.Model):
     readOnly = db.Column(db.Integer)
 
 
-
 class Carrier(db.Model):
     __tablename__ = 'carrier'
 
@@ -103,7 +128,6 @@ class Carrier(db.Model):
     name = db.Column(db.String(60), unique=True)
     readOnly = db.Column(db.Integer)
     scac = db.Column(db.String(4))
-
 
 
 class Carrierservice(db.Model):
@@ -121,7 +145,6 @@ class Carrierservice(db.Model):
     readOnly = db.Column(db.Integer, nullable=False)
 
 
-
 class Currency(db.Model):
     __tablename__ = 'currency'
 
@@ -136,7 +159,6 @@ class Currency(db.Model):
     name = db.Column(db.String(255), unique=True)
     rate = db.Column(db.Float(asdecimal=True))
     symbol = db.Column(db.Integer)
-
 
 
 class Customer(db.Model):
@@ -180,13 +202,11 @@ class Customer(db.Model):
     customFields = db.Column(db.JSON)
 
 
-
 class Customerstatu(db.Model):
     __tablename__ = 'customerstatus'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(15), nullable=False, unique=True)
-
 
 
 class Fobpoint(db.Model):
@@ -197,13 +217,11 @@ class Fobpoint(db.Model):
     name = db.Column(db.String(15), nullable=False, unique=True)
 
 
-
 class Issuablestatu(db.Model):
     __tablename__ = 'issuablestatus'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(15), unique=True)
-
 
 
 class Locationgroup(db.Model):
@@ -216,13 +234,11 @@ class Locationgroup(db.Model):
     qbClassId = db.Column(db.Integer, index=True)
 
 
-
 class Ordertype(db.Model):
     __tablename__ = 'ordertype'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(15), nullable=False, unique=True)
-
 
 
 class Paymentterm(db.Model):
@@ -244,13 +260,11 @@ class Paymentterm(db.Model):
     typeId = db.Column(db.Integer, nullable=False, index=True)
 
 
-
 class Paymenttermstype(db.Model):
     __tablename__ = 'paymenttermstype'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(30), nullable=False, unique=True)
-
 
 
 class Po(db.Model):
@@ -309,13 +323,11 @@ class Po(db.Model):
     issuedByUserId = db.Column(db.Integer, index=True)
 
 
-
 class Postatu(db.Model):
     __tablename__ = 'postatus'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(20), nullable=False, unique=True)
-
 
 
 class Potype(db.Model):
@@ -325,13 +337,11 @@ class Potype(db.Model):
     name = db.Column(db.String(30), nullable=False, unique=True)
 
 
-
 class Priority(db.Model):
     __tablename__ = 'priority'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(30), nullable=False, unique=True)
-
 
 
 class Qbclas(db.Model):
@@ -350,7 +360,6 @@ class Qbclas(db.Model):
     parentId = db.Column(db.Integer, nullable=False, index=True)
 
 
-
 class Shipterm(db.Model):
     __tablename__ = 'shipterms'
 
@@ -358,7 +367,6 @@ class Shipterm(db.Model):
     activeFlag = db.Column(db.Integer, nullable=False)
     name = db.Column(db.String(30), nullable=False, unique=True)
     readOnly = db.Column(db.Integer, nullable=False)
-
 
 
 class So(db.Model):
@@ -422,14 +430,15 @@ class So(db.Model):
     toBePrinted = db.Column(db.Integer, nullable=False)
     totalIncludesTax = db.Column(db.Integer, nullable=False)
     totalTax = db.Column(db.Numeric(28, 9))
-    subTotal = db.Column(db.Numeric(28, 9), nullable=False, server_default=db.FetchedValue())
-    totalPrice = db.Column(db.Numeric(28, 9), nullable=False, server_default=db.FetchedValue())
+    subTotal = db.Column(db.Numeric(28, 9), nullable=False,
+                         server_default=db.FetchedValue())
+    totalPrice = db.Column(db.Numeric(28, 9), nullable=False,
+                           server_default=db.FetchedValue())
     typeId = db.Column(db.Integer, nullable=False, index=True)
     url = db.Column(db.String(256))
     username = db.Column(db.String(100))
     vendorPO = db.Column(db.String(25))
     customFields = db.Column(db.JSON)
-
 
 
 class Sostatu(db.Model):
@@ -439,12 +448,12 @@ class Sostatu(db.Model):
     name = db.Column(db.String(15), nullable=False, unique=True)
 
 
-
 class Sotype(db.Model):
     __tablename__ = 'sotype'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(30), nullable=False, unique=True)
+
 
 class Taxrate(db.Model):
     __tablename__ = 'taxrate'
@@ -468,13 +477,11 @@ class Taxrate(db.Model):
     vendorId = db.Column(db.Integer, index=True)
 
 
-
 class Taxratetype(db.Model):
     __tablename__ = 'taxratetype'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(30), nullable=False, unique=True)
-
 
 
 class Vendor(db.Model):
@@ -505,7 +512,6 @@ class Vendor(db.Model):
     taxRateId = db.Column(db.Integer, index=True)
     url = db.Column(db.String(256))
     customFields = db.Column(db.JSON)
-
 
 
 class Vendorstatu(db.Model):
