@@ -1,0 +1,22 @@
+CREATE TABLE `nura`.`assist_user` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `username` varchar(255) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `active` int NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
+
+CREATE TABLE `nura`.`nura_so_po_item_map` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `soItemId` INT NOT NULL,
+  `poItemId` INT NOT NULL,
+  `quantity` DECIMAL(28,9) NOT NULL DEFAULT 0,
+  `dateCreated` DATETIME NULL,
+  `userId` INT NOT NULL,
+  `allocationTypeId` INT NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `id_UNIQUE` (`id` DESC) VISIBLE);
+
+  

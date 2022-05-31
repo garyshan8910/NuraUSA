@@ -10,7 +10,7 @@ migrate = Migrate()
 login_manager = LoginManager()
 login_manager.login_view = 'login'
 
-from nura.route import index, login, logout, register, so_po_mapping, po_details, so_details
+from nura.route import get_po_items, get_so_items, index, login, logout, register, so_po_mapping, po_details, so_details, test
 
 def create_app():
     app = Flask(__name__)
@@ -26,4 +26,7 @@ def create_app():
     app.add_url_rule('/so_po_mapping', 'so_po_mapping', so_po_mapping, methods=['GET', 'POST'])
     app.add_url_rule('/po_details', 'po_details', po_details, methods=['GET', 'POST'])
     app.add_url_rule('/so_details', 'so_details', so_details, methods=['GET', 'POST'])
+    app.add_url_rule('/test', 'test', test, methods=['GET', 'POST'])
+    app.add_url_rule('/get_po_items', 'get_po_items', get_po_items, methods=['GET', 'POST'])
+    app.add_url_rule('/get_so_items', 'get_so_items', get_so_items, methods=['GET', 'POST'])
     return app

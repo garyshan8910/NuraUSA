@@ -1,8 +1,11 @@
-from flask import render_template, redirect, url_for, request
+from operator import inv
+from tokenize import String
+from flask import jsonify, render_template, redirect, url_for, request
 from flask_login import login_user, current_user, logout_user, login_required
 from nura.forms import LoginForm, RegisterForm, SoForm
 from nura.models import AssistUser, So, Po
 from nura import db
+from nura.sopomapSQL import *
 
 # 这里加装饰器，就会要求用户要登陆才能访问这个页面
 
@@ -59,6 +62,9 @@ def register():
 
 @login_required
 def so_po_mapping():
+    # header = ['soNum', 'partNum', 'qtyOrdered', 'partId']
+    # result = db.engine.execute(sql_so())
+    # print(result.fetchall())
     return render_template('sopomapping.html')
 
 
@@ -79,3 +85,48 @@ def so_details():
 def po_details():
     po_details = Po.query
     return render_template('podetails.html', po_details=po_details)
+
+
+@login_required
+def test():
+    return render_template('dynamic_table.html')
+
+
+def columnFilter(sql_rows, columns):
+    '''
+    sql_rows = db.engine.execute(sql).fetchall()
+    columns = ["",]
+    '''
+    column_set = set(columns)
+    ret = []
+    for row in sql_rows:
+        obj = dict(row)
+        tmp_obj = dict()
+        for k in obj:
+            if k in column_set:
+                tmp_obj[k] = obj[k]
+        ret.append(tmp_obj)
+    return ret
+
+
+@login_required
+def get_po_items():
+    partId = request.args.get('partId', 0, type=int)
+    inventory = db.engine.execute(sql_inventory(partId)).fetchall()
+    inventory = columnFilter(
+        inventory, ["qtyOnHand", "qtyAllocated", "qtyOnOrder", "extra"])
+    poItems = db.engine.execute(sql_po_items(partId)).fetchall()
+    poItems = [dict(row) for row in poItems]
+    return jsonify(poItems=poItems, inventory=inventory)
+
+
+@login_required
+def get_so_items():
+    soItems = db.engine.execute(sql_so_items()).fetchall()
+    soItems = [dict(row) for row in soItems]
+    return jsonify(soItems=soItems)
+
+
+@login_required
+def create_soitem_poitem_map_record(so_item_id, po_item_id, allocate_type, allocate_num):
+    pass

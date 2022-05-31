@@ -1,9 +1,116 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="d-flex align-items-center justify-content-center h-100">
+<div class="container justify-content-center">
     <div class="d-flex flex-column">
         <h1>SO PO Mapping</h1>
     </div>
+    <div class="row">
+        <div class="col">
+            <table id="so_items_table" class="table table-striped">
+                <thead></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <div class="col">
+            <table id="inventory_table" class="table table-striped">
+                <thead></thead>
+                <tbody></tbody>
+            </table>
+            <table id="po_items_table" class="table table-striped">
+                <thead></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="myModal" class="modal bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <table id="modal-table">
+                        <thead></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary">Save changes</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+{% endblock %}
+{% block scripts %}
+<script>
+    $(function () {
+        function render_table(lob, extraPerRow = "") {
+            html = "<thead>" + render_header(lob[0]) + "</thead>" + "<tbody>" + render_rows(lob, extraPerRow) + "</tbody>"
+            return html;
+        }
+
+        function render_header(obj) {
+            if (Object.keys(obj).length == 0) return "";
+            result = "<tr><th>#</th>"
+            for (const k in obj) {
+                result += "<th>" + k + "</th>"
+            }
+            result += "</tr>"
+            return result
+        }
+        function render_rows(lob, extraPerRow = "") {
+            html = ""
+            for (const i in lob) {
+                let obj = lob[i]
+                let result = '<tr><td>' + (parseInt(i) + 1).toString() + '</td>'
+                for (const k in obj) {
+                    result += '<td class="' + k + '">' + obj[k] + '</td>'
+                }
+                result += extraPerRow
+                result += '</tr>'
+                html += result
+            }
+            return html
+        }
+        $.getJSON('/get_so_items', {}, function (data) {
+            console.log(data)
+            soItemsExtraRow = '<td><button type="button" class="match btn-sm">match</button></td>'
+            $("#so_items_table").html(render_table(data.soItems, soItemsExtraRow))
+
+            $(document).on('click', '.match', function () {
+                let partId = $(this).closest('tr').find('.partId').text()
+                $.getJSON('/get_po_items', {
+                    partId: partId,
+                }, function (data) {
+                    console.log(data)
+                    poItemsExtraRow = '<td class="allocate_num"><input class="allocate_input" placeholder="allocate num"/><br/><button class="allocate_inventory">allocate</button></td>'
+                    $("#po_items_table").html(render_table(data.poItems, poItemsExtraRow));
+                    inventoryExtraRow = '<td class="allocate_num"><input class="allocate_input" placeholder="allocate num"/><br/><button class="allocate_po_item">allocate</button></td>'
+                    $("#inventory_table").html(render_table(data.inventory, inventoryExtraRow));
+
+                    $(".allocate_input").each(function(){
+                    })
+
+                    $(document).on('click', '.allocate_inventory', function () {
+                        confirm("allocate_inventory")
+                    })
+
+                    $(document).on('click', '.allocate_po_item', function () {
+                        confirm("allocate_po_item")
+                    })
+
+                });
+                return false;
+            });
+        });
+    });
+</script>
 {% endblock %}
