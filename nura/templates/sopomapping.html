@@ -6,21 +6,67 @@
         <h1>SO PO Mapping</h1>
     </div>
     <div class="row">
+        <div id="allocate-alert" class="alert" role="alert" style="display:block; ">
+            <div id="allocate-alert-message" style="color: #fff;"></div>
+        </div>
+    </div>
+
+    <div class="row">
         <div class="col">
-            <table id="so_items_table" class="table table-striped">
+            <table id="so_items_table" class="table table-striped table-sm accordion">
                 <thead></thead>
                 <tbody></tbody>
             </table>
+            <nav id="so_items_pager" style="display: none">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item">
+                        <a class="page-link pre-page" href="#" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                            <span class="sr-only"></span>
+                        </a>
+                    </li>
+                    <li class="page-item"><input class="form-control page-num" type="text"
+                            style="width: 65px; text-align: center;" value="1"></li>
+                    <li class="page-item"><a class="page-link" href="#">/ <span class="total-page">100</span></a></li>
+                    <li class="page-item"><a class="page-link goto-page" href="#">Go</a></li>
+                    <li class="page-item">
+                        <a class="page-link next-page" href="#" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                            <span class="sr-only"></span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
         </div>
         <div class="col">
-            <table id="inventory_table" class="table table-striped">
+            <table id="inventory_table" class="table table-striped table-sm">
                 <thead></thead>
                 <tbody></tbody>
             </table>
-            <table id="po_items_table" class="table table-striped">
+            <table id="po_items_table" class="table table-striped table-sm">
                 <thead></thead>
                 <tbody></tbody>
             </table>
+            <nav id="po_items_pager" style="display: none">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item">
+                        <a class="page-link pre-page" href="#" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                            <span class="sr-only"></span>
+                        </a>
+                    </li>
+                    <li class="page-item"><input class="form-control page-num" type="text"
+                            style="width: 65px; text-align: center;" value="1"></li>
+                    <li class="page-item"><a class="page-link" href="#">/ <span class="total-page">100</span></a></li>
+                    <li class="page-item"><a class="page-link goto-page" href="#">Go</a></li>
+                    <li class="page-item">
+                        <a class="page-link next-page" href="#" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                            <span class="sr-only"></span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
         </div>
     </div>
 
@@ -52,65 +98,432 @@
 {% block scripts %}
 <script>
     $(function () {
-        function render_table(lob, extraPerRow = "") {
-            html = "<thead>" + render_header(lob[0]) + "</thead>" + "<tbody>" + render_rows(lob, extraPerRow) + "</tbody>"
+        function Generator() { };
+        Generator.prototype.rand = Math.floor(Math.random() * 26) + Date.now();
+        Generator.prototype.getId = function () {
+            return this.rand++;
+        };
+        var uid_generator = new Generator()
+
+        function table_html(lob, visible = [], hidden = [], extra_col_elems, extra_row_elems) {
+            header = header_html(lob[0], visible)
+            body = body_html_with_collapse(lob, visible, hidden, extra_col_elems, extra_row_elems)
+            html = `<thead>${header}</thead><tbody>${body}</tbody>`
+            console.log(html)
             return html;
         }
 
-        function render_header(obj) {
+        function header_html(obj, visible = []) {
             if (Object.keys(obj).length == 0) return "";
             result = "<tr><th>#</th>"
-            for (const k in obj) {
-                result += "<th>" + k + "</th>"
+            if (visible.length == 0) {
+                for (const k in obj) {
+                    result += `<th>${k}</th>`
+                }
+            } else {
+                for (const i in visible) {
+                    result += `<th>${visible[i]}</th>`
+                }
             }
             result += "</tr>"
             return result
         }
-        function render_rows(lob, extraPerRow = "") {
+        function body_html(obj_list, visible = [], hidden = [], extra_col_elems) {
             html = ""
-            for (const i in lob) {
-                let obj = lob[i]
-                let result = '<tr><td>' + (parseInt(i) + 1).toString() + '</td>'
-                for (const k in obj) {
-                    result += '<td class="' + k + '">' + obj[k] + '</td>'
+            for (let i in obj_list) {
+                let obj = obj_list[i]
+                let row_html = `<tr class="clickable-row"><td>${(parseInt(i) + 1).toString()}</td>`
+                if (visible.length == 0 && hidden.length == 0) {
+                    for (const k in obj) {
+                        row_html += `<td class="${k}">${render_null(obj[k])}</td>`
+                    }
+                } else {
+                    for (let i in visible) {
+                        if (visible[i] == "") row_html += `<td></td>`
+                        else row_html += `<td class="${visible[i]}">${render_null(obj[visible[i]])}</td>`
+                    }
+                    for (let i in hidden) {
+                        row_html += `<input type="hidden" class="${hidden[i]}" value="${obj[hidden[i]]}">`
+                    }
                 }
-                result += extraPerRow
-                result += '</tr>'
-                html += result
+                row_html += extra_col_elems
+                row_html += '</tr>'
+                html += row_html
             }
             return html
         }
-        $.getJSON('/get_so_items', {}, function (data) {
-            console.log(data)
-            soItemsExtraRow = '<td><button type="button" class="match btn-sm">match</button></td>'
-            $("#so_items_table").html(render_table(data.soItems, soItemsExtraRow))
 
-            $(document).on('click', '.match', function () {
-                let partId = $(this).closest('tr').find('.partId').text()
-                $.getJSON('/get_po_items', {
-                    partId: partId,
-                }, function (data) {
-                    console.log(data)
-                    poItemsExtraRow = '<td class="allocate_num"><input class="allocate_input" placeholder="allocate num"/><br/><button class="allocate_inventory">allocate</button></td>'
-                    $("#po_items_table").html(render_table(data.poItems, poItemsExtraRow));
-                    inventoryExtraRow = '<td class="allocate_num"><input class="allocate_input" placeholder="allocate num"/><br/><button class="allocate_po_item">allocate</button></td>'
-                    $("#inventory_table").html(render_table(data.inventory, inventoryExtraRow));
+        function body_html_with_collapse(obj_list, visible = [], hidden = [], extra_col_elems, extra_row_elems) {
+            html = ""
+            let row_id = 0
+            let uid = uid_generator.getId()
+            for (let i in obj_list) {
+                let obj = obj_list[i]
+                let col_len = visible.length
+                let row_html = `<tr class="clickable-row"><td>${(parseInt(i) + 1).toString()}</td>`
+                if (visible.length == 0 && hidden.length == 0) {
+                    for (const k in obj) {
+                        row_html += `<td class="${k}">${render_null(obj[k])}</td>`
+                    }
+                } else {
+                    for (let i in visible) {
+                        if (visible[i] == "") row_html += `<td></td>`
+                        else row_html += `<td class="${visible[i]}">${render_null(obj[visible[i]])}</td>`
+                    }
+                    for (let i in hidden) {
+                        row_html += `<input type="hidden" class="${hidden[i]}" value="${obj[hidden[i]]}">`
+                    }
+                }
+                // 每行按钮等额外组件
+                row_html += extra_col_elems
+                // 多加一行 accordion 插件
+                if (extra_row_elems) { row_html += `<td><button class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#r${uid}_${row_id}"></button></td>` }
+                row_html += '</tr>'
+                // 多加一行 accordion 插件
+                if (extra_row_elems) { row_html += `<tr class="collapse accordion-collapse" id="r${uid}_${row_id}"><td colspan=${col_len + 2}><table class="table table-striped table-sm"></table></td>${extra_row_elems}</tr>` }
+                html += row_html
+                row_id += 1
+            }
+            return html
+        }
 
-                    $(".allocate_input").each(function(){
-                    })
+        function set_clickalbe_row(table_id, can_unselec_row) {
+            $(`#${table_id}`).on('click', '.clickable-row', function (event) {
+                if (can_unselec_row) {
+                    if ($(this).hasClass('table-primary')) {
+                        $(this).removeClass('table-primary')
+                    }
+                    else {
+                        $(this).addClass('table-primary').siblings().removeClass('table-primary');
+                    }
+                } else {
+                    $(this).addClass('table-primary').siblings().removeClass('table-primary');
+                }
 
-                    $(document).on('click', '.allocate_inventory', function () {
-                        confirm("allocate_inventory")
-                    })
-
-                    $(document).on('click', '.allocate_po_item', function () {
-                        confirm("allocate_po_item")
-                    })
-
-                });
-                return false;
             });
+        }
+
+        function render_null(value) {
+            return value == null ? "" : value;
+        }
+        function paginate(table_id, pager_id, params, total, url, visible, hidden, extra_col_elems, extra_row_elems) {
+            table = $(`#${table_id}`)
+            pager = $(`#${pager_id}`)
+            prePage = pager.find('.pre-page')
+            nextPage = pager.find('.next-page')
+            totalPage = pager.find('.total-page')
+            gotoPage = pager.find('.goto-page')
+            pageNum = pager.find('.page-num')
+            pageNum.val("1")
+
+            limit = params['limit']
+            total_page = parseInt((total - 1) / limit) + 1
+            totalPage.text(total_page)
+
+            if (total_page > 1) {
+                pager.show()
+            } else {
+                pager.hide()
+            }
+
+            prePage.unbind()
+            prePage.click(function () {
+                pageNum = $(this).closest("nav").find('.page-num')
+                let curr_page = pageNum.val()
+                if (curr_page > 1) {
+                    curr_page -= 1
+                }
+                else {
+                    curr_page = 1
+                }
+                pageNum.val(curr_page)
+                params["page_num"] = curr_page
+                others = {
+                    "table_id": table_id,
+                    "pager_id": "",
+                    "visible_col": visible,
+                    "hidden_col": hidden,
+                    "extra_col_elems": extra_col_elems,
+                    "extra_row_elems": extra_row_elems
+                }
+                fetch_data(url, params, render_as_table, others)
+            })
+
+            nextPage.unbind()
+            nextPage.click(function () {
+                pageNum = $(this).closest("nav").find('.page-num')
+                totalPage = $(this).closest("nav").find('.total-page')
+                let total_page = parseInt(totalPage.text())
+                let curr_page = parseInt(pageNum.val())
+                if (curr_page >= total_page) {
+                    curr_page = total_page
+                }
+                else {
+                    curr_page += 1
+                }
+                pageNum.val(curr_page)
+                params["page_num"] = curr_page
+                others = {
+                    "table_id": table_id,
+                    "pager_id": "",
+                    "visible_col": visible,
+                    "hidden_col": hidden,
+                    "extra_col_elems": extra_col_elems,
+                    "extra_row_elems": extra_row_elems
+                }
+                fetch_data(url, params, render_as_table, others)
+            })
+
+            gotoPage.unbind()
+            gotoPage.click(function () {
+                pageNum = $(this).closest("nav").find('.page-num')
+                totalPage = $(this).closest("nav").find('.total-page')
+                let total_page = parseInt(totalPage.text())
+                let curr_page = pageNum.val()
+                if (curr_page < 1 || curr_page > total_page) { curr_page = 1 }
+                pageNum.val(curr_page)
+                params["page_num"] = curr_page
+                others = {
+                    "table_id": table_id,
+                    "pager_id": "",
+                    "visible_col": visible,
+                    "hidden_col": hidden,
+                    "extra_col_elems": extra_col_elems,
+                    "extra_row_elems": extra_row_elems
+                }
+                fetch_data(url, params, render_as_table, others)
+            })
+        }
+
+        function query_pager_check(obj) {
+            if (!('page_num' in obj) || obj['page_num'] < 1) {
+                obj['page_num'] = 1
+            }
+            if (!('limit' in obj) || obj['limit'] <= 0) {
+                obj['limit'] = 10
+            }
+        }
+
+        function re_render_table(url, query_obj = {}, params, visible, hidden, extra_col_elems, extra_row_elems, table_id) {
+            query_pager_check(query_obj)
+            Object.assign(query_obj, params)
+            $.getJSON(url, query_obj, function (data) {
+                $(`#${table_id}`).html(table_html(data.data, visible, hidden, extra_col_elems, extra_row_elems))
+            })
+        }
+        function accordion_button_click(url, so_itemid, callback, others) {
+            params = { "so_itemid": so_itemid }
+            fetch_data(url, params, callback, others)
+        }
+
+        function render_accordion_row(data, url, params, others) {
+            row_id = others["row_id"]
+            visible = others["visible"]
+            extra = others["extra"]
+            console.log(others)
+            console.log(data)
+            extra_row = ""
+            if (data.data.length > 0) {
+                extra_row = get_summary_qty_tr(data.data, visible)
+            }
+            $(`#${row_id}`).find("table").html(body_html(data.data, visible, [], "") + extra_row)
+        }
+
+        function get_summary_qty_tr(rows, visible) {
+            total = 0
+            for (let i in rows) {
+                total += parseFloat(rows[i]["qty"])
+            }
+            row_html = `<tr><td></td>`
+            for (let i in visible) {
+                if (visible[i] == "qty") row_html += `<td class="total"}">${total.toFixed(2)}</td>`
+                else row_html += `<td></td>`
+            }
+            row_html += `</tr>`
+            return row_html
+        }
+
+        function so_item_row_click(table_id) {
+            po_items_query_url = "/get_po_items"
+            po_item_extra_col_elems = '<td class="allocate_num"><input class="allocate_input" style="width: 100%" placeholder="allocate num"/><br/><button class="allocate_po_item">allocate</button></td>'
+            po_items_table_visible = ["ponum", "qtytofulfill", "qtyfulfilled", "status"]
+            po_items_table_hidden = ["poitemid"]
+            po_items_limit = 5
+
+            inventory_pager = ""
+            inventory_query_url = "/get_inventory"
+            inventory_table_visible = ["qtyonhand", "qtyonorder", "qtyallocated", "extra"]
+            inventory_table_hidden = []
+            inventoryExtraRow = '<td class="allocate_num"><input class="allocate_input" style="width: 100%"  placeholder="allocate num"/><br/><button class="allocate_inventory">allocate</button></td>'
+            inventory_limit = 1
+
+            allocate_input_class = "allocate_input"
+            allocate_inventory_btn_class = "allocate_inventory"
+            allocate_po_btn_class = "allocate_inventory"
+
+            soitem_map_query_url = "/get_soitem_map"
+
+            $(`#${table_id}`).on('click', '.accordion-button', function (e) {
+                e.stopPropagation(); // 防止点击tr中的button时触发tr的点击时间
+
+                so_itemid = $(this).closest('tr').find('.soitemid').val()
+
+                others = {
+                    "row_id": $(this).attr("data-bs-target").replace("#", ""),
+                    "visible": ["", "", "ponum", "qty", "", "", ""],
+                    "extra": ""
+                }
+
+                accordion_button_click(soitem_map_query_url, so_itemid, render_accordion_row, others)
+            })
+
+            $(`#${table_id}`).on('click', '.clickable-row', function (e) {
+                // if (!$(this).is('tr')) return
+                let partId = $(this).closest('tr').find('.partid').val()
+                SELECTED_SO_ITEM_ID = $(this).closest('tr').find('.soitemid').val()
+                // inventory
+                inventory_params = { "limit": inventory_limit, "page_num": 1, "partId": partId }
+                inventory_others = {
+                    "table_id": inventory_table_id,
+                    "pager_id": inventory_pager,
+                    "visible_col": inventory_table_visible,
+                    "hidden_col": inventory_table_hidden,
+                    "extra_col_elems": inventoryExtraRow
+                }
+                fetch_data(inventory_query_url, inventory_params, render_as_table_inventory, inventory_others)
+                // po items
+                po_items_params = { "limit": po_items_limit, "page_num": 1, "partId": partId }
+                ps_items_others = {
+                    "table_id": po_items_table_id,
+                    "pager_id": po_items_pager_id,
+                    "visible_col": po_items_table_visible,
+                    "hidden_col": po_items_table_hidden,
+                    "extra_col_elems": po_item_extra_col_elems
+                }
+                fetch_data(po_items_query_url, po_items_params, render_as_table_po_items, ps_items_others)
+            })
+            set_clickalbe_row(inventory_table_id, true)
+            set_clickalbe_row(po_items_table_id, true)
+        }
+
+        function fetch_data(url, params, callback, others) {
+            query_pager_check(params)
+            // console.log("params:",params)
+            $.getJSON(url, params, function (data) {
+                callback(data, url, params, others)
+            })
+        }
+
+        function render_as_table(data, url, params, others) {
+            table_id = others["table_id"]
+            pager_id = others["pager_id"]
+            visible_col = others["visible_col"]
+            hidden_col = others["hidden_col"]
+            extra_col_elems = others["extra_col_elems"]
+            extra_row_elems = others["extra_row_elems"]
+            query_pager_check(params)
+            if (data.total > 0 && $(`#${table_id}`).length > 0) {
+                $(`#${table_id}`).html(table_html(data.data, visible_col, hidden_col, extra_col_elems, extra_row_elems))
+            }
+            if (pager_id != "" && $(`#${pager_id}`).length > 0) {
+                paginate(table_id, pager_id, params, data.total, url, visible_col, hidden_col, extra_col_elems, extra_row_elems)
+            }
+        }
+
+        function render_as_table_inventory(data, url, params, others) {
+            render_as_table(data, url, params, others)
+
+            $(".allocate_inventory").unbind()
+            $(".allocate_inventory").click(function () {
+                qty = $(this).closest('tr').find('.allocate_input').val()
+                console.log("so_item_id:", SELECTED_SO_ITEM_ID, 'allo inven:', qty)
+                create_map_url = "/create_soitem_poitem_map_record"
+                params = { "so_item_id": SELECTED_SO_ITEM_ID, "allocate_type_id": 0, "qty": qty }
+                var posting = $.post(create_map_url, params)
+
+                posting.done(function (data) {
+                    console.log(data)
+                    if (data.success) {
+                        so_item_row = $(`#${so_items_table_id} :input[value=${SELECTED_SO_ITEM_ID}]`).closest("tr")
+                        so_num = so_item_row.find(".sonum").text()
+                        map_cnt_col = so_item_row.find(".mapcnt")
+                        map_cnt = parseInt(map_cnt_col.text()) || 0
+                        map_cnt_col.text(map_cnt + 1)
+                        alert_show_then_clear(`Allocated ${qty} to SO:${so_num} with with inventory`, 'success')
+                    }
+                })
+            })
+        }
+
+        function render_as_table_po_items(data, url, params, others) {
+            render_as_table(data, url, params, others)
+
+            $(".allocate_po_item").unbind()
+            $(".allocate_po_item").click(function () {
+                po_item_row = $(this).closest('tr')
+                qty = po_item_row.find('.allocate_input').val()
+                po_item_id = po_item_row.find('.poitemid').val()
+                po_num = po_item_row.find(".ponum").text()
+                console.log("so_item_id:", SELECTED_SO_ITEM_ID, 'allo allocate_po_item', po_item_id, qty)
+                create_map_url = "/create_soitem_poitem_map_record"
+                params = { "so_item_id": SELECTED_SO_ITEM_ID, "po_item_id": po_item_id, "allocate_type_id": 1, "qty": qty }
+                var posting = $.post(create_map_url, params)
+
+                posting.done(function (data) {
+                    if (data.success) {
+                        so_item_row = $(`#${so_items_table_id} :input[value=${SELECTED_SO_ITEM_ID}]`).closest("tr")
+                        so_num = so_item_row.find(".sonum").text()
+                        map_cnt_col = so_item_row.find(".mapcnt")
+                        map_cnt = parseInt(map_cnt_col.text()) || 0
+                        map_cnt_col.text(map_cnt + 1)
+                        alert_show_then_clear(`Allocated ${qty} to SO:${so_num} with PO:${po_num}`, 'success')
+                    }
+                })
+            })
+        }
+
+        function alert_show_then_clear(message, style) {
+            $(`#${allocate_alert_id}`).attr("class", `alert alert-${style}`)
+            $(`#${allocate_alert_message_id}`).text(message).css("color", "")
+            setTimeout(function () {
+                $(`#${allocate_alert_id}`).attr("class", `alert`)
+                $(`#${allocate_alert_message_id}`).css("color", "#fff")
+            }, 5000);
+        }
+
+        const default_limit = 10
+        let SELECTED_SO_ITEM_ID = 0
+        const so_items_pager_id = "so_items_pager"
+        const so_items_table_query_url = "/get_so_items"
+
+        const po_items_pager_id = "po_items_pager"
+        const so_items_table_visible = ["partnum", "productnum", "description", "qtyordered", "sonum", "mapcnt"]
+        const so_items_table_hidden = ["partid", "soitemid"]
+        const so_items_table_id = "so_items_table"
+        const so_items_extra_col_elems = ""
+        const so_items_extra_row_elems = `<input type="hidden" class="mapping-records" />`
+
+        const inventory_table_id = "inventory_table"
+        const po_items_table_id = "po_items_table"
+        const allocate_alert_id = "allocate-alert"
+        const allocate_alert_message_id = "allocate-alert-message"
+
+        // initial event of the page
+        $.getJSON(so_items_table_query_url, { "limit": default_limit }, function (data) {
+            console.log(data)
+
+            $(`#${so_items_table_id}`).html(table_html(data.data, so_items_table_visible, so_items_table_hidden, so_items_extra_col_elems, so_items_extra_row_elems))
+            if (data.total > default_limit) {
+                paginate(so_items_table_id, so_items_pager_id, { "limit": default_limit }, data.total, so_items_table_query_url, so_items_table_visible, so_items_table_hidden, so_items_extra_col_elems, so_items_extra_row_elems)
+                $(`#${so_items_pager_id}`).click(function () {
+                    $(`#${inventory_table_id}, #${po_items_table_id}`).html("")
+                    $(`#${po_items_pager_id}`).hide()
+                })
+            }
+            so_item_row_click(so_items_table_id)
+            set_clickalbe_row(so_items_table_id, false)
         });
+
     });
 </script>
 {% endblock %}

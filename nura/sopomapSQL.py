@@ -1,6 +1,7 @@
 def sql_inventory(partId):
     return f'''
     SELECT
+        PART.ID AS PARTID,
         PART.NUM AS PART,
         PART.DESCRIPTION,
         UOM.CODE AS UOMCODE,
@@ -57,18 +58,56 @@ def sql_inventory(partId):
 
 
 def sql_po_items(partId):
-    return f'''select po.num poNum, poitem.description, ROUND(qtyToFulfill,2) qtyToFulfill, ROUND(qtyFulfilled,2) qtyFulfilled, postatus.name status from po
+    return f'''select poitem.id poitemid, po.num poNum, poitem.description, ROUND(qtyToFulfill,2) qtyToFulfill, ROUND(qtyFulfilled,2) qtyFulfilled, postatus.name status from po
     left join poitem on poitem.poid = po.id
     left join postatus on postatus.id = po.statusId 
     where poitem.partId = {partId}
-    order by po.datecreated desc;'''
+    order by po.id desc, poitem.id'''
 
 
 def sql_so_items(so=1):
-    return f'''select soitem.id soitemid, so.num soNum, part.num partNum, ROUND(qtyOrdered,2) qtyOrdered, part.id partId from so
-    left join soitem on soitem.soid = so.id
+    return f'''select soitem.id soitemid, so.num soNum, part.num partNum, ROUND(qtyOrdered,2) qtyOrdered, part.id partId, part.description, product.num productnum, map_records.mapcnt from so
+    join soitem on soitem.soid = so.id
     left join product on soitem.productId = product.id
     left join part on part.id = product.partId
+    left join (
+    select soitemid, count(1) mapcnt from nura_soitem_poitem_map
+    group by soitemid
+    ) as map_records on map_records.soitemid = soitem.id
     where 1=1
-    order by so.dateCreated desc
-    limit 10'''
+    order by so.id desc, soitem.id
+    '''
+
+
+def sql_soitem_poitem_map(soid, allocateTypeId):
+    return f'''select nura_soitem_poitem_map.id as mapid, soitemid, poitemid, soitem.productNum, part.num partnum, ROUND(qty,2) qty, allocateTypeId, userid, assist_user.username, po.num as ponum, poitem.description poitemdes, so.id soid
+    from so
+    join soitem on so.id = soitem.soid
+    left join nura_soitem_poitem_map on soitem.id = nura_soitem_poitem_map.soitemid
+    join product on product.id = soitem.productid
+    join part on part.id = product.partid
+    left join assist_user on nura_soitem_poitem_map.userid = assist_user.id
+    left join poitem on poitem.id = nura_soitem_poitem_map.poitemid
+    left join po on po.id = poitem.poid
+    where so.id = {soid} and allocateTypeId = {allocateTypeId}
+    order by so.id desc, nura_soitem_poitem_map.soitemid, nura_soitem_poitem_map.allocateTypeId, nura_soitem_poitem_map.created desc'''
+
+
+def sql_so():
+    return f'''select so.id soid, so.num sonum, customerContact, dateCreated, salesman, totalPrice from so 
+    where id in (
+    select so.id from nura_soitem_poitem_map 
+    join soitem on nura_soitem_poitem_map.soitemid = soitem.id
+    join so on so.id = soitem.soid
+    ) 
+    order by id desc'''
+
+
+def sql_soitem_map(soitemid):
+    return f'''select coalesce(po.num, 'inventory') ponum,   Round(nura_soitem_poitem_map.qty,2) qty , assist_user.id userid, assist_user.username, nura_soitem_poitem_map.created, allocateTypeId from soitem
+    join nura_soitem_poitem_map on nura_soitem_poitem_map.soitemid = soitem.id
+    join assist_user on  assist_user.id = nura_soitem_poitem_map.userid
+    left join poitem on poitem.id = nura_soitem_poitem_map.poitemid
+    left join po on po.id = poitem.poid
+    where soitem.id = {soitemid}
+    order by allocateTypeId, created '''

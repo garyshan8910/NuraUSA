@@ -502,3 +502,18 @@ class Vendorstatu(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(15), nullable=False, unique=True)
+
+
+class NuraSoitemPoitemMap(db.Model):
+    __tablename__ = 'nura_soitem_poitem_map'
+    __table_args__ = (
+        db.Index('index', 'soitemid', 'poitemid', 'allocateTypeId'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    soitemid = db.Column(db.Integer, nullable=False)
+    poitemid = db.Column(db.Integer)
+    created = db.Column(db.DateTime, nullable=False, server_default=db.text("CURRENT_TIMESTAMP"))
+    qty = db.Column(db.DECIMAL(28, 9), nullable=False)
+    userid = db.Column(db.Integer, nullable=False)
+    allocateTypeId = db.Column(db.Integer, nullable=False)
