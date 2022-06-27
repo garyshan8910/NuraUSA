@@ -2,6 +2,19 @@ import hashlib
 from nura import db, login_manager
 from flask_login import UserMixin
 
+def to_dict(cls, ins):
+    '''
+    non recursive method to convert an instance for db.model class to dict
+    only work for simple model with basic data type for each column
+    '''
+    ret = {}
+    try:
+        for c in cls.__table__.columns:
+            ret[c.name] = getattr(ins, c.name)
+
+    except:
+        print("An exception occurred")
+    return ret
 
 class AssistUser(UserMixin, db.Model):
     __tablename__ = 'assist_user'
@@ -517,3 +530,38 @@ class NuraSoitemPoitemMap(db.Model):
     qty = db.Column(db.DECIMAL(28, 9), nullable=False)
     userid = db.Column(db.Integer, nullable=False)
     allocateTypeId = db.Column(db.Integer, nullable=False)
+
+
+class NuraPoItemInfo(db.Model):
+    __tablename__ = 'nura_po_item_info'
+
+    id = db.Column(db.Integer, primary_key=True, unique=True)
+    poitemid = db.Column(db.Integer, nullable=False, index=True)
+    transport = db.Column(db.VARCHAR(45))
+    priceBeforeNeg = db.Column(db.DECIMAL(28, 4))
+    priceAfterNeg = db.Column(db.DECIMAL(28, 0))
+    etd = db.Column(db.DateTime)
+    eta = db.Column(db.DateTime)
+    coaReq = db.Column(db.VARCHAR(45))
+    coaCheck = db.Column(db.VARCHAR(45))
+    labelCheck = db.Column(db.VARCHAR(45))
+    shippingDoc = db.Column(db.VARCHAR(45))
+    arrivalNotice = db.Column(db.VARCHAR(45))
+    Customer = db.Column(db.VARCHAR(45))
+    mfgBatch = db.Column(db.VARCHAR(45))
+    nuraBatch = db.Column(db.VARCHAR(45))
+    shipperQualified = db.Column(db.VARCHAR(45))
+    qualificationNote = db.Column(db.VARCHAR(45))
+    qcRelease = db.Column(db.VARCHAR(45))
+    needNuraCoa = db.Column(db.VARCHAR(45))
+    mfg = db.Column(db.VARCHAR(45))
+    lotNuraCoa = db.Column(db.VARCHAR(45))
+
+class NuraPoItemInfoDetail(db.Model):
+    __tablename__ = 'nura_po_item_info_detail'
+
+    id = db.Column(db.Integer, primary_key=True, unique=True)
+    poiteminfoid = db.Column(db.Integer, nullable=False)
+    userid = db.Column(db.Integer, nullable=False)
+    content = db.Column(db.VARCHAR(256), nullable=False)
+    created = db.Column(db.DateTime, nullable=False, server_default=db.text("CURRENT_TIMESTAMP"))

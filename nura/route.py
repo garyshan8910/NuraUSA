@@ -1,9 +1,12 @@
+from email import message
 from flask import jsonify, render_template, redirect, url_for, request
 from flask_login import login_user, current_user, logout_user, login_required
+from inflect import CONSONANTS
+from sqlalchemy import true
 from nura.forms import LoginForm, RegisterForm, SoForm
-from nura.models import AssistUser, NuraSoitemPoitemMap, So, Po
+from nura.models import AssistUser, NuraPoItemInfo, NuraPoItemInfoDetail, NuraSoitemPoitemMap, So, Po, to_dict
 from nura import db
-from nura.query import query_result_all, query_result_by_page
+from nura.query import SQL_STMT, query_result_all, query_result_by_page
 from nura.sopomapSQL import *
 from datetime import datetime
 
@@ -85,11 +88,6 @@ def po_details():
 
 
 @login_required
-def test():
-    return render_template('dynamic_table.html')
-
-
-@login_required
 def so():
     return render_template('so.html')
 
@@ -99,34 +97,69 @@ def so_items():
     return render_template('soitems.html')
 
 
-def get_tables_by_page(sql):
+@login_required
+def po_items():
+    # return render_template('poitems.html')
+    return render_template('sopomapping.html')
+
+
+@login_required
+def po_item_info():
+    return render_template('poiteminfo.html')
+
+
+def get_tables_by_page(sql, params={}):
     page_num = request.args.get('page_num', 1, type=int)
     limit = request.args.get('limit', 10, type=int)
-    total, curr_page, rows = query_result_by_page(sql, limit, page_num)
+    total, curr_page, rows = query_result_by_page(sql, limit, page_num, params)
     return jsonify(data=rows, total=total, curr_page=curr_page)
+
 
 def get_tables_all(sql):
     rows = query_result_all(sql)
     return jsonify(data=rows)
 
+
 @login_required
 def get_po_items():
-    partId = request.args.get('partId', 0, type=int)
-    sql = sql_po_items(partId)
-    return get_tables_by_page(sql)
+    sql_stmt_obj = SQL_STMT(poitem_base_sql,
+                            poitem_order_by,
+                            request.args,
+                            poitem_clause_dict,
+                            request.args.get("limit", 10, type=int),
+                            request.args.get("page_num", 1, type=int),
+                            poitem_wildcard_fields,
+                            poitem_required_args)
+    total, curr_page, rows = sql_stmt_obj.query_by_page()
+    return jsonify(data=rows, total=total, curr_page=curr_page)
 
 
 @login_required
 def get_inventory():
-    partId = request.args.get('partId', 0, type=int)
-    sql = sql_inventory(partId)
-    return get_tables_by_page(sql)
+    sql_stmt_obj = SQL_STMT(inventory_base_sql,
+                            inventory_order_by,
+                            request.args,
+                            inventory_clause_dict,
+                            request.args.get("limit", 10, type=int),
+                            request.args.get("page_num", 1, type=int),
+                            inventory_wildcard_fields,
+                            inventory_required_args)
+    total, curr_page, rows = sql_stmt_obj.query_by_page()
+    return jsonify(data=rows, total=total, curr_page=curr_page)
 
 
 @login_required
 def get_so_items():
-    sql = sql_so_items()
-    return get_tables_by_page(sql)
+    sql_stmt_obj = SQL_STMT(soitem_base_sql,
+                            soitem_order_by,
+                            request.args,
+                            soitem_clause_dict,
+                            request.args.get("limit", 10, type=int),
+                            request.args.get("page_num", 1, type=int),
+                            soitem_wildcard_fields,
+                            soitem_required_args)
+    total, curr_page, rows = sql_stmt_obj.query_by_page()
+    return jsonify(data=rows, total=total, curr_page=curr_page)
 
 
 @login_required
@@ -138,11 +171,14 @@ def create_soitem_poitem_map_record():
     po_item_id = request.form.get('po_item_id', None, type=int)
     allocate_type_id = request.form.get('allocate_type_id', 0, type=int)
     qty = request.form.get('qty', 0, type=float)
-    obj = NuraSoitemPoitemMap(soitemid=so_item_id, poitemid=po_item_id,
-                              qty=qty, userid=current_user.get_id(), allocateTypeId=allocate_type_id)
+    obj = NuraSoitemPoitemMap(soitemid=so_item_id,
+                              poitemid=po_item_id,
+                              qty=qty,
+                              userid=current_user.get_id(),
+                              allocateTypeId=allocate_type_id)
     db.session.add(obj)
     db.session.commit()
-    return jsonify(success=True)
+    return jsonify(data=to_dict(NuraSoitemPoitemMap, obj), success=True, message="create mapping success")
 
 
 @login_required
@@ -158,8 +194,85 @@ def get_so():
     sql = sql_so()
     return get_tables_by_page(sql)
 
+
 @login_required
 def get_soitem_map():
-    so_itemid = request.args.get('so_itemid', 0, type=int)
-    sql = sql_soitem_map(so_itemid)
-    return get_tables_all(sql)
+    sql_stmt_obj = SQL_STMT(soitemmap_base_sql,
+                            soitemmap_order_by,
+                            request.args,
+                            soitemmap_clause_dict,
+                            request.args.get("limit", 10, type=int),
+                            request.args.get("page_num", 1, type=int),
+                            soitemmap_wildcard_fields,
+                            soitemmap_required_args)
+    total, curr_page, rows = sql_stmt_obj.query_all()
+    return jsonify(data=rows, total=total, curr_page=curr_page)
+
+
+@login_required
+def get_poitem_info():
+    sql_stmt_obj = SQL_STMT(poiteminfo_base_sql,
+                            poiteminfo_order_by,
+                            request.args,
+                            poiteminfo_clause_dict,
+                            request.args.get("limit", 10, type=int),
+                            request.args.get("page_num", 1, type=int),
+                            poiteminfo_wildcard_fields,
+                            poiteminfo_required_args)
+    total, curr_page, rows = sql_stmt_obj.query_by_page()
+    return jsonify(data=rows, total=total, curr_page=curr_page)
+
+
+@login_required
+def update_poitem_info():
+    print(request.form)
+    obj = NuraPoItemInfo(**request.form)
+    if not obj.id and NuraPoItemInfo.query.filter(
+            NuraPoItemInfo.poitemid == obj.poitemid).first() == None:
+        obj.id = None
+        db.session.add(obj)
+    else:
+        the_obj = NuraPoItemInfo.query.filter(
+            NuraPoItemInfo.poitemid == obj.poitemid).first()
+        if the_obj:
+            for c in NuraPoItemInfo.__table__.columns:
+                if getattr(obj, c.name):
+                    setattr(the_obj, c.name, getattr(obj, c.name))
+        obj = the_obj
+    db.session.commit()
+    return jsonify(data=to_dict(NuraPoItemInfo, obj), success=True, message="success")
+
+
+@login_required
+def get_po_item_info_details():
+    sql_stmt_obj = SQL_STMT(poiteminfo_detail_base_sql,
+                            poiteminfo_detail_order_by,
+                            request.args,
+                            poiteminfo_detail_clause_dict,
+                            request.args.get("limit", 10, type=int),
+                            request.args.get("page_num", 1, type=int),
+                            poiteminfo_detail_wildcard_fields,
+                            poiteminfo_detail_required_args)
+    print(sql_stmt_obj.__dict__)
+    total, curr_page, rows = sql_stmt_obj.query_by_page()
+    return jsonify(data=rows, total=total, curr_page=curr_page)
+
+
+@login_required
+def add_poiteminfo_detail():
+    request_form = dict(request.form)
+    print(request_form)
+    request_form["userid"] = current_user.get_id()
+    poitemid = request_form.pop("poitemid")
+    poiteminfoid = request_form["poiteminfoid"]
+    print(request_form)
+    if not poiteminfoid or not db.session.query(NuraPoItemInfo.query.filter(NuraPoItemInfo.id == poiteminfoid).exists()).scalar():
+        poiteminfo_obj = NuraPoItemInfo(**{"poitemid": poitemid})
+        db.session.add(poiteminfo_obj)
+        # 获取插入poiteminfo_obj后的ID
+        db.session.flush()
+        request_form["poiteminfoid"] = poiteminfo_obj.id
+    obj = NuraPoItemInfoDetail(**request_form)
+    db.session.add(obj)
+    db.session.commit()
+    return jsonify(data=to_dict(NuraPoItemInfoDetail, obj), success=True, message="success")

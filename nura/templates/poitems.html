@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+{% block head %} {% endblock %}
+
+{% block content %}
+<div class="container justify-content-center">
+    <div class="d-flex flex-column">
+        <h1>PO items</h1>
+    </div>
+    <div class="row">
+        <div id="allocate-alert" class="alert" role="alert" style="display:block; ">
+            <div id="allocate-alert-message" style="color: #fff;"></div>
+        </div>
+    </div>
+
+    <div class="row">
+        <table id="po_items_table" class="table table-striped table-sm">
+            <thead></thead>
+            <tbody></tbody>
+        </table>
+        <nav id="po_items_pager" style="display: none">
+            <ul class="pagination justify-content-center">
+                <li class="page-item"><a class="page-link goto-page">total <span class="total-items"></span>
+                        items</a></li>
+                <li class="page-item">
+                    <a class="page-link pre-page" href="#" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                        <span class="sr-only"></span>
+                    </a>
+                </li>
+                <li class="page-item"><input class="form-control page-num" type="text"
+                        style="width: 65px; text-align: center;" value="1"></li>
+                <li class="page-item"><a class="page-link" href="#">/ <span class="total-page">100</span></a></li>
+                <li class="page-item"><a class="page-link goto-page" href="#">Go</a></li>
+                <li class="page-item">
+                    <a class="page-link next-page" href="#" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                        <span class="sr-only"></span>
+                    </a>
+                </li>
+                <input type="hidden" class="params" />
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<div id="poiteminfo_edit_modal" class="modal" tabindex="-1" aria-labelledby="poiteminfo_edit_modalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="poiteminfo_edit_modalLabel">Modal title</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="modal_poitem_info_form"></form>
+                <input type="hidden" id="modal_poitem_info_id" />
+                <input type="hidden" id="modal_poitem_id" />
+            </div>
+            <div class="modal-footer">
+                <div id="poiteminfo_edit_modal_result" class="alert" role="alert"></div>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="edit_modal_change_btn">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="poiteminfo_detail_modal" class="modal" tabindex="-1" aria-labelledby="poiteminfo_detail_modalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="poiteminfo_detail_modalLabel">Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <table id="po_item_details_table" class="table table-striped table-sm">
+                    <thead></thead>
+                    <tbody></tbody>
+                </table>
+                <nav id="po_item_details_pager" style="display: none">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item">
+                            <a class="page-link pre-page" href="#" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                                <span class="sr-only"></span>
+                            </a>
+                        </li>
+                        <li class="page-item"><input class="form-control page-num" type="text"
+                                style="width: 65px; text-align: center;" value="1"></li>
+                        <li class="page-item"><a class="page-link" href="#">/ <span class="total-page">100</span></a>
+                        </li>
+                        <li class="page-item"><a class="page-link goto-page" href="#">Go</a></li>
+                        <li class="page-item">
+                            <a class="page-link next-page" href="#" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                                <span class="sr-only"></span>
+                            </a>
+                        </li>
+                        <input type="hidden" class="params" />
+                    </ul>
+                </nav>
+                <input type="hidden" id="poiteminfo_detail_modal_poiteminfoid" />
+                <input type="hidden" id="poiteminfo_detail_modal_poitemid" />
+
+                <form class="row">
+                    <div class="col-auto">
+                        <textarea name="content" placeholder="content" class="form-control" id="poitem_detail_content"
+                            rows="3"></textarea>
+                    </div>
+                    <div class="col-auto">
+                        <div id="poitem_detail_content_btn_result" class="alert" role="alert"></div>
+                        <button id="poitem_detail_content_btn" type="button" class="btn btn-primary mb-3">add new
+                            detail</button>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <!-- <button type="button" class="btn btn-primary" id="detail_modal_change_btn">Save changes</button> -->
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript" charset="utf8" src="../static/table.js"></script>
+<script>
+    $(function () {
+        const po_items_table_id = "po_items_table"
+        const po_items_table_pager_id = "po_items_pager"
+        const po_items_url = "/get_poitem_info"
+        const po_item_visible = ["ponum", "partnum", "description"]
+        const po_item_hidden = ["_poitemid", "id"]
+        const po_item_info_visible = ['transport', 'priceBeforeNeg', 'priceAfterNeg', 'etd', 'eta', 'coaReq', 'coaCheck', 'labelCheck', 'shippingDoc', 'arrivalNotice', 'Customer', 'mfgBatch', 'nuraBatch', 'shipperQualified', 'qualificationNote', 'qcRelease', 'needNuraCoa', 'mfg', 'lotNuraCoa']
+        const po_item_info_hidden = ['id', 'poitemid']
+        const poiteminfo_edit_modal_id = "poiteminfo_edit_modal"
+        const poiteminfo_edit_modal_result_id = "poiteminfo_edit_modal_result"
+        const modal_poitem_info_id = "modal_poitem_info_id"
+        const modal_poitem_id = "modal_poitem_id"
+        const modal_poitem_info_form_id = "modal_poitem_info_form"
+        const edit_modal_change_btn_id = "edit_modal_change_btn"
+        const update_poitem_info_url = "/update_poitem_info"
+        const po_item_details_url = "/get_po_item_info_details"
+        const po_item_details_table_id = "po_item_details_table"
+        const po_item_details_pager_id = "po_item_details_pager"
+        const poiteminfo_detail_modal_id = "poiteminfo_detail_modal"
+        const poitem_detail_content_btn_id = "poitem_detail_content_btn"
+        const poitem_detail_content_id = "poitem_detail_content"
+        const poiteminfo_detail_modal_poiteminfoid = "poiteminfo_detail_modal_poiteminfoid"
+        const poiteminfo_detail_modal_poitemid = "poiteminfo_detail_modal_poitemid"
+        const add_poiteminfo_detail_url = "/add_poiteminfo_detail"
+        const poitem_detail_content_btn_result = "poitem_detail_content_btn_result"
+
+        let others = {
+            "table_id": po_items_table_id,
+            "pager_id": po_items_table_pager_id,
+            "visible_col": po_item_visible,
+            "hidden_col": po_item_hidden,
+            "extra_col_elems": `<td><button class="btn-sm more_poitem">more</button></td><td><button class="btn-sm poitem_details">details</button></td>`,
+            "extra_row_elems": "",
+            "po_item_info_visible": po_item_info_visible,
+            "po_item_info_hidden": po_item_info_hidden
+        }
+        let params = {
+            "limit": 10
+        }
+        fetch_data(po_items_url, params, render_as_table, others)
+        set_clickalbe_row(po_items_table_id, can_unselec_row = true)
+        bind_row_click_event(po_items_table_id)
+
+        function bind_row_click_event(table_id) {
+            // 这里需要用用table_id 绑定每行按钮的事件
+            $(`#${table_id}`).on('click', '.more_poitem', function () {
+                let poitem_id = $(this).closest('tr').find("._poitemid").val()
+                let model_visible = others["po_item_info_visible"]
+                let model_hidden = others["po_item_info_hidden"]
+                $.getJSON(po_items_url, { "poitem_id": poitem_id }, function (data) {
+                    console.log(data)
+                    render_as_form(data.data, modal_poitem_info_form_id, model_visible, model_hidden)
+                    $(`#${poiteminfo_edit_modal_id}`).modal("show")
+                    bind_modal_change_event(edit_modal_change_btn_id, modal_poitem_info_form_id, model_visible, model_hidden)
+                })
+            })
+
+            $(`#${table_id}`).on('click', '.poitem_details', function () {
+                let poitem_id = $(this).closest('tr').find("._poitemid").val()
+                let poiteminfo_id = $(this).closest('tr').find(".id").val()
+                let ponum = $(this).closest('tr').find(".ponum").text()
+                let partnum = $(this).closest('tr').find(".partnum").text()
+                let model_title_id = "poiteminfo_detail_modalLabel"
+                $(`#${model_title_id}`).text(`Details for PO: ${ponum}, partNum: ${partnum}`)
+                poitem_details_others = {
+                    "table_id": po_item_details_table_id,
+                    "pager_id": po_item_details_pager_id,
+                    "visible_col": ["content", "username", "created"],
+                    "hidden_col": ["id"],
+                    "extra_col_elems": ``,
+                    "extra_row_elems": ``,
+                }
+                let poitem_details_params = {
+                    "limit": 5,
+                    "po_item_info_id": poiteminfo_id
+                }
+
+                console.log("poiteminfo_id", poiteminfo_id)
+
+                fetch_data(po_item_details_url, poitem_details_params, render_as_table, poitem_details_others)
+
+                $(`#${poiteminfo_detail_modal_poiteminfoid}`).val(poiteminfo_id)
+                $(`#${poiteminfo_detail_modal_poitemid}`).val(poitem_id)
+
+                bind_add_detail_content_event(po_item_details_url, poitem_details_params, poitem_details_others)
+
+                $(`#${poiteminfo_detail_modal_id}`).modal("show")
+
+            })
+        }
+        function render_as_form(data, form_id, model_visible, model_hidden) {
+            let obj = data.length == 0 ? null : data[0]
+            $(`#${modal_poitem_info_id}`).val(obj == null ? null : obj['id'])
+            $(`#${modal_poitem_id}`).val(obj == null ? null : obj['_poitemid'])
+            detail_form = $(`#${form_id}`)
+            form_html = ""
+            for (let i in model_visible) {
+                let field = model_visible[i]
+                temp =
+                    `<div class="row mb-3">
+                    <label for="m_${field}" class="col-sm-3 col-form-label">${field}</label>
+                    <span for="m_${field}" class="col-sm-4 col-form-label">${obj == null ? "" : (obj[field] == null ? "" : obj[field])}</span>
+                    <div class="col-sm-5 col-form">
+                        <input type="${data_type_map[cols[field]]}" class="form-control" id="m_${field}" name="${field}"/>
+                    </div>
+                </div>`
+                form_html += temp
+            }
+            detail_form.html(form_html)
+        }
+
+        function bind_modal_change_event(btn_id, form_id, model_visible, model_hidden) {
+            $(`#${btn_id}`).unbind()
+            $(`#${btn_id}`).click(function () {
+                poitem_info_id = $(`#${poiteminfo_edit_modal_id}`).find(`#${modal_poitem_info_id}`).val()
+                poitem_id = $(`#${poiteminfo_edit_modal_id}`).find(`#${modal_poitem_id}`).val()
+                // console.log("poitem_info_id", poitem_info_id)
+                // console.log("poitem_id", poitem_id)
+                params = {
+                    "id": poitem_info_id,
+                    "poitemid": poitem_id,
+                }
+                $(`#${modal_poitem_info_form_id} :input`).each(function () {
+                    value = $(this).val().trim()
+                    if (value != "") {
+                        params[this.name] = value
+                    }
+                })
+                let posting = $.post(update_poitem_info_url, params)
+                posting.done(function (data) {
+                    console.log(data)
+                    if (data.success) {
+                        render_as_form([data.data], form_id, model_visible, model_hidden)
+                    }
+                    $(`#${poiteminfo_edit_modal_result_id}`).text(data.message)
+
+                })
+            })
+        }
+
+        function bind_add_detail_content_event(po_item_details_url, poitem_details_params, poitem_details_others) {
+            $(`#${poitem_detail_content_btn_id}`).unbind()
+            $(`#${poitem_detail_content_btn_id}`).click(function () {
+                content = $(`#${poitem_detail_content_id}`).val().trim()
+                if (content == "") return
+                poiteminfoid = $(`#${poiteminfo_detail_modal_poiteminfoid}`).val()
+                poitemid = $(`#${poiteminfo_detail_modal_poitemid}`).val()
+                let params = {
+                    "poiteminfoid": poiteminfoid,
+                    "poitemid": poitemid,
+                    "content": content
+                }
+                let posting = $.post(add_poiteminfo_detail_url, params)
+                posting.done(function (data) {
+                    console.log(data)
+                    if (data.success) {
+                        let poiteminfo_detail = data.data
+                        $(`#${poiteminfo_detail_modal_poiteminfoid}`).val(poiteminfo_detail.poiteminfoid)
+                        $(`#${poitem_detail_content_btn_result}`).text(data.message)
+                        $(`#${po_items_table_pager_id} .goto-page`).trigger("click")
+                        poitem_details_params["po_item_info_id"] = poiteminfo_detail.poiteminfoid
+                        fetch_data(po_item_details_url, poitem_details_params, render_as_table, poitem_details_others)
+                        $(`#${poitem_detail_content_id}`).val("")
+                    } else {
+
+                    }
+                })
+            })
+
+        }
+    })
+</script>
+{% endblock %}

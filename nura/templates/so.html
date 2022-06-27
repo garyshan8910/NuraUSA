@@ -1,0 +1,436 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container justify-content-center">
+    <div class="d-flex flex-column">
+        <h1>SO</h1>
+    </div>
+    <div class="row">
+        <div id="allocate-alert" class="alert" role="alert" style="display:block; ">
+            <div id="allocate-alert-message" style="color: #fff;"></div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <table id="so_items_table" class="table table-striped table-sm">
+                <thead></thead>
+                <tbody></tbody>
+            </table>
+            <nav id="so_items_pager" style="display: none">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item">
+                        <a class="page-link pre-page" href="#" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                            <span class="sr-only"></span>
+                        </a>
+                    </li>
+                    <li class="page-item"><input class="form-control page-num" type="text"
+                            style="width: 65px; text-align: center;" value="1"></li>
+                    <li class="page-item"><a class="page-link" href="#">/ <span class="total-page">100</span></a></li>
+                    <li class="page-item"><a class="page-link goto-page" href="#">Go</a></li>
+                    <li class="page-item">
+                        <a class="page-link next-page" href="#" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                            <span class="sr-only"></span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        <div class="col">
+            <table id="inventory_table" class="table table-striped table-sm">
+                <thead></thead>
+                <tbody></tbody>
+            </table>
+            <table id="po_items_table" class="table table-striped table-sm">
+                <thead></thead>
+                <tbody></tbody>
+            </table>
+            <nav id="po_items_pager" style="display: none">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item">
+                        <a class="page-link pre-page" href="#" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                            <span class="sr-only"></span>
+                        </a>
+                    </li>
+                    <li class="page-item"><input class="form-control page-num" type="text"
+                            style="width: 65px; text-align: center;" value="1"></li>
+                    <li class="page-item"><a class="page-link" href="#">/ <span class="total-page">100</span></a></li>
+                    <li class="page-item"><a class="page-link goto-page" href="#">Go</a></li>
+                    <li class="page-item">
+                        <a class="page-link next-page" href="#" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                            <span class="sr-only"></span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <div id="myModal" class="modal bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <table id="modal-table">
+                        <thead></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary">Save changes</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+    $(function () {
+        function table_html(lob, visiable = [], hidden = [], extra_row_elem) {
+            header = header_html(lob[0], visiable)
+            body = body_html(lob, visiable, hidden, extra_row_elem)
+            html = `<thead>${header}</thead><tbody>${body}</tbody>`
+            return html;
+        }
+
+        function header_html(obj, visiable = []) {
+            if (Object.keys(obj).length == 0) return "";
+            result = "<tr><th>#</th>"
+            if (visiable.length == 0) {
+                for (const k in obj) {
+                    result += `<th>${k}</th>`
+                }
+            } else {
+                for (const i in visiable) {
+                    result += `<th>${visiable[i]}</th>`
+                }
+            }
+            result += "</tr>"
+            return result
+        }
+        function body_html(obj_list, visiable = [], hidden = [], extra_row_elem = "") {
+            html = ""
+            for (let i in obj_list) {
+                let obj = obj_list[i]
+                let result = '<tr class="clickable-row"><td>' + (parseInt(i) + 1).toString() + '</td>'
+                if (visiable.length == 0 && hidden.length == 0) {
+                    for (const k in obj) {
+                        result += `<td class="${k}">${render_null(obj[k])}</td>`
+                    }
+                } else {
+                    for (let i in visiable) {
+                        result += `<td class="${visiable[i]}">${render_null(obj[visiable[i]])}</td>`
+                    }
+                    for (let i in hidden) {
+                        result += `<input type="hidden" class="${hidden[i]}" value="${obj[hidden[i]]}">`
+                    }
+                }
+                result += extra_row_elem
+                result += '</tr>'
+                html += result
+            }
+            return html
+        }
+
+        function set_clickalbe_row(table_id, can_unselec_row) {
+            $(`#${table_id}`).on('click', '.clickable-row', function (event) {
+                if (can_unselec_row) {
+                    if ($(this).hasClass('table-primary')) {
+                        $(this).removeClass('table-primary')
+                    }
+                    else {
+                        $(this).addClass('table-primary').siblings().removeClass('table-primary');
+                    }
+                } else {
+                    $(this).addClass('table-primary').siblings().removeClass('table-primary');
+                }
+
+            });
+        }
+
+        function render_null(value) {
+            return value == null ? "" : value;
+        }
+        function paginate(table_id, pager_id, params, total, url, visiable, hidden, extra_row_elem) {
+            table = $(`#${table_id}`)
+            pager = $(`#${pager_id}`)
+            prePage = pager.find('.pre-page')
+            nextPage = pager.find('.next-page')
+            totalPage = pager.find('.total-page')
+            gotoPage = pager.find('.goto-page')
+            pageNum = pager.find('.page-num')
+            pageNum.val("1")
+
+            limit = params['limit']
+            total_page = parseInt((total - 1) / limit) + 1
+            totalPage.text(total_page)
+
+            if (total_page > 1) {
+                pager.show()
+            } else {
+                pager.hide()
+            }
+
+            prePage.unbind()
+            prePage.click(function () {
+                pageNum = $(this).closest("nav").find('.page-num')
+                let curr_page = pageNum.val()
+                if (curr_page > 1) {
+                    curr_page -= 1
+                }
+                else {
+                    curr_page = 1
+                }
+                pageNum.val(curr_page)
+                params["page_num"] = curr_page
+                // re_render_table(url, params, visiable, hidden, extra_row_elem, table_id)
+                others = {
+                    "table_id": table_id,
+                    "pager_id": "",
+                    "visible_col": visiable,
+                    "hidden_col": hidden,
+                    "extra_row_elem": extra_row_elem
+                }
+                fetch_data(url, params, render_as_table, others)
+            })
+
+            nextPage.unbind()
+            nextPage.click(function () {
+                pageNum = $(this).closest("nav").find('.page-num')
+                totalPage = $(this).closest("nav").find('.total-page')
+                let total_page = parseInt(totalPage.text())
+                let curr_page = parseInt(pageNum.val())
+                if (curr_page >= total_page) {
+                    curr_page = total_page
+                }
+                else {
+                    curr_page += 1
+                }
+                pageNum.val(curr_page)
+                params["page_num"] = curr_page
+                others = {
+                    "table_id": table_id,
+                    "pager_id": "",
+                    "visible_col": visiable,
+                    "hidden_col": hidden,
+                    "extra_row_elem": extra_row_elem
+                }
+                fetch_data(url, params, render_as_table, others)
+            })
+
+            gotoPage.unbind()
+            gotoPage.click(function () {
+                pageNum = $(this).closest("nav").find('.page-num')
+                totalPage = $(this).closest("nav").find('.total-page')
+                let total_page = parseInt(totalPage.text())
+                let curr_page = pageNum.val()
+                if (curr_page < 1 || curr_page > total_page) { curr_page = 1 }
+                pageNum.val(curr_page)
+                params["page_num"] = curr_page
+                others = {
+                    "table_id": table_id,
+                    "pager_id": "",
+                    "visible_col": visiable,
+                    "hidden_col": hidden,
+                    "extra_row_elem": extra_row_elem
+                }
+                fetch_data(url, params, render_as_table, others)
+            })
+        }
+
+        function query_pager_check(obj) {
+            if (!('page_num' in obj) || obj['page_num'] < 1) {
+                obj['page_num'] = 1
+            }
+            if (!('limit' in obj) || obj['limit'] <= 0) {
+                obj['limit'] = 10
+            }
+        }
+
+        function re_render_table(url, query_obj = {}, params, visiable, hidden, extra_row_elem, table_id) {
+            query_pager_check(query_obj)
+            Object.assign(query_obj, params)
+            $.getJSON(url, query_obj, function (data) {
+                $(`#${table_id}`).html(table_html(data.data, visiable, hidden, extra_row_elem))
+            })
+        }
+
+        function so_item_row_click(table_id) {
+            po_items_query_url = "/get_soitem_poitem_map"
+            po_item_extra_row_elem = '<td class="allocate_num"><input class="allocate_input" style="width: 100%" placeholder="allocate num"/><br/><button class="allocate_po_item">allocate</button></td>'
+            po_items_table_visiable = ["partnum", "ponum", "qty", "username"]
+            po_items_table_hidden = ["mapid", "soitemid", "poitemid"]
+            po_items_limit = 5
+
+            inventory_pager = ""
+            inventory_query_url = "/get_soitem_poitem_map"
+            inventory_table_visible = ["partnum", "productnum", "qty", "username"]
+            inventory_table_hidden = ["mapid", "soitemid"]
+            inventoryExtraRow = '<td class="allocate_num"><input class="allocate_input" style="width: 100%"  placeholder="allocate num"/><br/><button class="allocate_inventory">allocate</button></td>'
+            inventory_limit = 1
+
+            allocate_input_class = "allocate_input"
+            allocate_inventory_btn_class = "allocate_inventory"
+            allocate_po_btn_class = "allocate_inventory"
+
+            $(`#${table_id}`).on('click', '.match, .clickable-row', function () {
+                let so_id = $(this).closest('tr').find('.soid').val()
+                let allocate_type_id = $(this).closest('tr').find('.allocatetypeid').val()
+                SELECTED_SO_ITEM_ID = $(this).closest('tr').find('.soitemid').val()
+                // inventory
+                inventory_params = { "limit": inventory_limit, "page_num": 1, "so_id": so_id, "allocate_type_id": 0 }
+                inventory_others = {
+                    "table_id": inventory_table_id,
+                    "pager_id": inventory_pager,
+                    "visible_col": inventory_table_visible,
+                    "hidden_col": inventory_table_hidden,
+                    "extra_row_elem": inventoryExtraRow
+                }
+                fetch_data(inventory_query_url, inventory_params, render_as_table_inventory, inventory_others)
+                // po items
+                po_items_params = { "limit": po_items_limit, "page_num": 1, "so_id": so_id, "allocate_type_id": 1 }
+                ps_items_others = {
+                    "table_id": po_items_table_id,
+                    "pager_id": po_items_pager_id,
+                    "visible_col": po_items_table_visiable,
+                    "hidden_col": po_items_table_hidden,
+                    "extra_row_elem": po_item_extra_row_elem
+                }
+                fetch_data(po_items_query_url, po_items_params, render_as_table_po_items, ps_items_others)
+            })
+            set_clickalbe_row(inventory_table_id, true)
+            set_clickalbe_row(po_items_table_id, true)
+        }
+
+        function fetch_data(url, params, callback, others) {
+            query_pager_check(params)
+            // console.log("params:",params)
+            $.getJSON(url, params, function (data) {
+            console.log("data:",data)
+                callback(data, url, params, others)
+            })
+        }
+
+        function render_as_table(data, url, params, others) {
+            table_id = others["table_id"]
+            pager_id = others["pager_id"]
+            visible_col = others["visible_col"]
+            hidden_col = others["hidden_col"]
+            extra_row_elem = others["extra_row_elem"]
+            query_pager_check(params)
+            if (data.total > 0 && $(`#${table_id}`).length > 0) {
+                $(`#${table_id}`).html(table_html(data.data, visible_col, hidden_col, extra_row_elem))
+            }
+            if (pager_id != "" && $(`#${pager_id}`).length > 0) {
+                paginate(table_id, pager_id, params, data.total, url, visible_col, hidden_col, extra_row_elem)
+            }
+        }
+
+        function render_as_table_inventory(data, url, params, others) {
+            render_as_table(data, url, params, others)
+
+            $(".allocate_inventory").unbind()
+            $(".allocate_inventory").click(function () {
+                qty = $(this).closest('tr').find('.allocate_input').val()
+                console.log("so_item_id:", SELECTED_SO_ITEM_ID, 'allo inven:', qty)
+                create_map_url = "/create_soitem_poitem_map_record"
+                params = { "so_item_id": SELECTED_SO_ITEM_ID, "allocate_type_id": 0, "qty": qty }
+                var posting = $.post(create_map_url, params)
+
+                posting.done(function (data) {
+                    console.log(data)
+                    if (data.success) {
+                        so_item_row = $(`#${so_items_table_id} :input[value=${SELECTED_SO_ITEM_ID}]`).closest("tr")
+                        so_num = so_item_row.find(".sonum").text()
+                        map_cnt_col = so_item_row.find(".mapcnt")
+                        map_cnt = parseInt(map_cnt_col.text()) || 0
+                        map_cnt_col.text(map_cnt + 1)
+                        alert_show_then_clear(`Allocated ${qty} to SO:${so_num} with with inventory`, 'success')
+                    }
+                })
+            })
+        }
+
+        function render_as_table_po_items(data, url, params, others) {
+            render_as_table(data, url, params, others)
+
+            $(".allocate_po_item").unbind()
+            $(".allocate_po_item").click(function () {
+                po_item_row = $(this).closest('tr')
+                qty = po_item_row.find('.allocate_input').val()
+                po_item_id = po_item_row.find('.poitemid').val()
+                po_num = po_item_row.find(".ponum").text()
+                console.log("so_item_id:", SELECTED_SO_ITEM_ID, 'allo allocate_po_item', po_item_id, qty)
+                create_map_url = "/create_soitem_poitem_map_record"
+                params = { "so_item_id": SELECTED_SO_ITEM_ID, "po_item_id": po_item_id, "allocate_type_id": 1, "qty": qty }
+                var posting = $.post(create_map_url, params)
+
+                posting.done(function (data) {
+                    if (data.success) {
+                        so_item_row = $(`#${so_items_table_id} :input[value=${SELECTED_SO_ITEM_ID}]`).closest("tr")
+                        so_num = so_item_row.find(".sonum").text()
+                        map_cnt_col = so_item_row.find(".mapcnt")
+                        map_cnt = parseInt(map_cnt_col.text()) || 0
+                        map_cnt_col.text(map_cnt + 1)
+                        alert_show_then_clear(`Allocated ${qty} to SO:${so_num} with PO:${po_num}`, 'success')
+                    }
+                })
+            })
+        }
+
+        function alert_show_then_clear(message, style) {
+            $(`#${allocate_alert_id}`).attr("class", `alert alert-${style}`)
+            $(`#${allocate_alert_message_id}`).text(message).css("color", "")
+            setTimeout(function () {
+                $(`#${allocate_alert_id}`).attr("class", `alert`)
+                $(`#${allocate_alert_message_id}`).css("color", "#fff")
+            }, 5000);
+        }
+
+        const default_limit = 10
+        let SELECTED_SO_ITEM_ID = 0
+        const so_items_pager_id = "so_items_pager"
+        const so_items_table_query_url = "/get_so"
+
+        const po_items_pager_id = "po_items_pager"
+        const so_items_table_visiable = ["sonum", "customercontact", "datecreated", "totalprice"]
+        const so_items_table_hidden = ["soid", "allocateTypeId"]
+        const so_items_table_id = "so_items_table"
+        const so_items_extra_row_elem = ""
+        // so_items_extra_row_elem = '<td><button type="button" class="match btn-sm">match</button></td>'
+
+        const inventory_table_id = "inventory_table"
+        const po_items_table_id = "po_items_table"
+        const allocate_alert_id = "allocate-alert"
+        const allocate_alert_message_id = "allocate-alert-message"
+
+        $.getJSON(so_items_table_query_url, { "limit": default_limit }, function (data) {
+            console.log(data)
+
+            $(`#${so_items_table_id}`).html(table_html(data.data, so_items_table_visiable, so_items_table_hidden))
+            if (data.total > default_limit) {
+                paginate(so_items_table_id, so_items_pager_id, { "limit": default_limit }, data.total, so_items_table_query_url, so_items_table_visiable, so_items_table_hidden, so_items_extra_row_elem)
+                $(`#${so_items_pager_id}`).click(function () {
+                    $(`#${inventory_table_id}, #${po_items_table_id}`).html("")
+                    $(`#${po_items_pager_id}`).hide()
+                })
+            }
+            so_item_row_click(so_items_table_id)
+            set_clickalbe_row(so_items_table_id, false)
+        });
+
+    });
+</script>
+{% endblock %}

@@ -16,4 +16,81 @@ CREATE TABLE `nurausa`.`nura_soitem_poitem_map` (
   `userid` int NOT NULL,
   `allocateTypeId` int NOT NULL,
   PRIMARY KEY (`id`),
-  INDEX `index` (`soitemid` ASC, `poitemid` ASC, `allocate_type_id` ASC) VISIBLE);
+  UNIQUE INDEX `id_UNIQUE` (`id` DESC) VISIBLE;
+  INDEX `index` (`soitemid` DESC, `poitemid` DESC, `allocate_type_id` ASC) VISIBLE);
+
+CREATE TABLE `nurausa`.`nura_po_item_info` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `poitemid` INT NOT NULL,
+  `transport` NVARCHAR(45) NULL,
+  `priceBeforeNeg` DECIMAL(28,2) NULL,
+  `priceAfterNeg` DECIMAL(28,2) NULL,
+  `etd` DATETIME NULL,
+  `eta` DATETIME NULL,
+  `coaReq` NVARCHAR(45) NULL,
+  `coaCheck` NVARCHAR(45) NULL,
+  `labelCheck` NVARCHAR(45) NULL,
+  `shippingDoc` NVARCHAR(45) NULL,
+  `arrivalNotice` NVARCHAR(45) NULL,
+  `Customer` NVARCHAR(45) NULL,
+  `mfgBatch` NVARCHAR(45) NULL,
+  `nuraBatch` NVARCHAR(45) NULL,
+  `shipperQualified` NVARCHAR(45) NULL,
+  `qualificationNote` NVARCHAR(45) NULL,
+  `qcRelease` NVARCHAR(45) NULL,
+  `needNuraCoa` NVARCHAR(45) NULL,
+  `mfg` NVARCHAR(45) NULL,
+  `lotNuraCoa` NVARCHAR(10) NULL,
+  PRIMARY KEY (`id`,`poitemid`),
+  UNIQUE KEY `idnura_po_item_UNIQUE` (`id` DESC),
+  UNIQUE KEY `nura_po_item_poitemid_UNIQUE` (`poitemid` DESC),
+  UNIQUE INDEX `idnura_po_item_UNIQUE` (`id` DESC) VISIBLE,
+  INDEX `index` (`poitemid` DESC) VISIBLE);
+
+CREATE TABLE `nurausa`.`nura_po_item_info_detail` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `poiteminfoid` INT NOT NULL,
+  `userid` INT NOT NULL,
+  `content` NVARCHAR(256) NOT NULL,
+  `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `int_UNIQUE` (`id` ASC) VISIBLE,
+  INDEX `index` (`poiteminfoid` DESC, `userid` ASC) VISIBLE);
+
+CREATE TABLE `nurausa`.`nura_mapping_detail` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `mapid` INT NOT NULL,
+  `userid` INT NOT NULL,
+  `content` VARCHAR(256) NOT NULL,
+  `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE,
+  INDEX `index` (`mapid` DESC, `userid` ASC) VISIBLE);
+
+
+ALTER TABLE `nurausa`.`nura_soitem_poitem_map` 
+ADD COLUMN `WHS` NVARCHAR(45) NULL AFTER `allocateTypeId`,
+ADD COLUMN `shipDate` DATETIME NULL AFTER `WHS`,
+ADD COLUMN `shipForEom` TINYINT NULL AFTER `shipDate`,
+ADD COLUMN `nuraLot` NVARCHAR(45) NULL AFTER `shipForEom`,
+ADD COLUMN `mfgBatchLot` NVARCHAR(45) NULL AFTER `nuraLot`,
+ADD COLUMN `QCRelease` NVARCHAR(45) NULL AFTER `mfgBatchLot`,
+ADD COLUMN `creditReleased` NVARCHAR(45) NULL AFTER `QCRelease`,
+ADD COLUMN `needToChangeLabel` NVARCHAR(45) NULL AFTER `creditReleased`,
+ADD COLUMN `categoryId` INT NOT NULL DEFAULT 0 AFTER `needToChangeLabel`,
+ADD COLUMN `statusId` INT NOT NULL DEFAULT 0 AFTER `categoryId`,
+DROP INDEX `index` ,
+ADD INDEX `index` (`soitemid` DESC, `poitemid` DESC, `allocateTypeId` ASC, `categoryId` ASC, `statusId` ASC) VISIBLE;
+;
+
+CREATE TABLE `nurausa`.`nura_mapping_category` (
+  `id` INT NOT NULL,
+  `name` NVARCHAR(45) NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE);
+
+CREATE TABLE `nurausa`.`nura_mapping_status` (
+  `id` INT NOT NULL,
+  `name` NVARCHAR(45) NULL,
+  PRIMARY KEY (`id`));
+
