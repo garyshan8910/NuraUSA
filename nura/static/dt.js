@@ -482,3 +482,54 @@ class MessageBox {
         
     }
 }
+
+class DetailListModal extends MD {
+    constructor(modalSettings, detailTableSettings, addFormSettings) {
+        super(modalSettings)
+        this.table = new TB(detailTableSettings)
+        this.addForm = new AF(addFormSettings)
+        this.bindEvent()
+    }
+    bindEvent() {
+        this.saveBtn.click($.proxy(this, 'onSaveClick'))
+    }
+    onSaveClick() {
+        return this.addForm.submitForm()
+            .then($.proxy(this, 'update_table_params'))
+            .then($.proxy(this, 'refresh'))
+            .then($.proxy(this, 'clearAddForm'))
+            .then($.proxy(this, 'refreshParent'))
+            .then($.proxy(this, 'showMessage'))
+    }
+    showMessage() {
+        this.message.text(this.addForm.post_message)
+    }
+    update_table_params(data) {
+        if (data.success) {
+            console.log("update_table_params", data)
+            this.table.params['poiteminfoid'] = data.data.poiteminfoid
+        }
+    }
+    refresh() {
+        return this.table.refresh()
+    }
+
+    clearAddForm() {
+        this.addForm.clearForm()
+    }
+    showDetailFormModal(params, title) {
+        /*
+        params: object 
+        {
+            poitemid: int
+        }
+        */
+        $.extend(this.table.params, params)
+        $.extend(this.addForm.params, params)
+        this.table.curr_page = 1
+        this.clearModal()
+        this.title.text(title)
+        this.table.refresh()
+            .then($.proxy(this, 'show'))
+    }
+}

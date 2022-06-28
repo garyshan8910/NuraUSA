@@ -11,7 +11,7 @@ migrate = Migrate()
 login_manager = LoginManager()
 login_manager.login_view = 'login'
 
-from nura.route import add_poiteminfo_detail, create_soitem_poitem_map_record, get_inventory, get_po_items, get_po_item_info_details, get_poitem_info, get_so, get_so_items, get_soitem_map, get_soitem_poitem_map, index, login, logout, po_items, register, so, po_item_info, so_items, so_po_mapping, po_details, so_details, update_poitem_info
+from nura.route import add_poiteminfo_detail, add_soitem_poitem_map_detail, create_soitem_poitem_map_record, get_inventory, get_po_items, get_po_item_info_details, get_poitem_info, get_so, get_so_items, get_soitem_map, get_soitem_poitem_map, get_soitem_poitem_map_details, get_soitem_poitem_map_info, index, login, logout, po_items, register, so, po_item_info, so_items, so_po_mapping, po_details, so_details, soitem_poitem_map_info, update_poitem_info
 
 class CustomJSONEncoder(JSONEncoder):
     def default(self, obj):
@@ -55,5 +55,9 @@ def create_app():
     app.add_url_rule('/get_po_item_info_details', 'get_po_item_info_details', get_po_item_info_details, methods=['GET'])
     app.add_url_rule('/add_poiteminfo_detail', 'add_poiteminfo_detail', add_poiteminfo_detail, methods=['POST'])
     app.add_url_rule('/po_item_info', 'po_item_info', po_item_info, methods=['GET'])
+    app.add_url_rule('/soitem_poitem_map_info', 'soitem_poitem_map_info', soitem_poitem_map_info, methods=['GET'])
+    app.add_url_rule('/get_soitem_poitem_map_info', 'get_soitem_poitem_map_info', get_soitem_poitem_map_info, methods=['GET'])
+    app.add_url_rule('/get_soitem_poitem_map_details', 'get_soitem_poitem_map_details', get_soitem_poitem_map_details, methods=['GET'])
+    app.add_url_rule('/add_soitem_poitem_map_detail', 'add_soitem_poitem_map_detail', add_soitem_poitem_map_detail, methods=['POST'])
     
     return app

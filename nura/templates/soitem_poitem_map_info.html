@@ -3,7 +3,7 @@
 
 {% block content %}
 <div class="container justify-content-center">
-    <div id="poteminfoTB">
+    <div id="mapTB">
         <div class="search" style="display: none;">
             <form class="search-form">
                 <div class="row g-2">
@@ -134,131 +134,66 @@
 {% block scripts %}
 <script type="text/javascript" charset="utf8" src="../static/dt.js"></script>
 <script>
-    class poiteminfoTB extends TB {
+    class mapTB extends TB {
         constructor(settings) {
             super(settings)
+            $.extend(this, settings)
             this.bindRowBtnEvent()
         }
         bindRowBtnEvent() {
             var parent = this
-            var efm = this.editFormModal
-            this.table.on('click', '.more', function () {
-                var poitem_id = $(this).closest('tr').find("input._poitemid").val()
-                var ponum = $(this).closest('tr').find("td.ponum").text()
-                var description = $(this).closest('tr').find("td.description").text()
-                var poiteminfoid = $(this).closest('tr').find("input.id").val()
-                efm.showEditFormModal({
-                    poitemid: poitem_id,
-                }, `${ponum} ${description}`)
-            })
             var dlm = this.detailListModal
             this.table.on('click', '.details', function () {
-                var poitem_id = $(this).closest('tr').find("input._poitemid").val()
-                var poiteminfoid = $(this).closest('tr').find("input.id").val()
+                var mapid = $(this).closest('tr').find("input.mapid").val()
                 dlm.showDetailFormModal({
-                    poitemid: poitem_id,
-                    poiteminfoid: poiteminfoid
-                }, poitem_id)
+                    mapid: mapid,
+                }, mapid)
             })
         }
     }
 
-    class EditFormModal extends MD {
-        constructor(modalSettings, formSettings) {
-            super(modalSettings)
-            this.form = new EF(formSettings)
-            this.bindEvent()
+    class MapDetailListModal extends DetailListModal {
+        constructor(modalSettings, detailTableSettings, addFormSettings) {
+            super(modalSettings, detailTableSettings, addFormSettings)
         }
-        bindEvent() {
-            this.saveBtn.click($.proxy(this, 'onSaveClick'))
-        }
-        onSaveClick() {
-            this.form.update_data()
-                .then($.proxy(this, 'showMessage'))
-                .then($.proxy(this, 'refreshParent'))
-        }
-        showMessage() {
-            this.message.text(this.form.post_message)
-        }
-        showEditFormModal(params, title) {
-            /*
-            params: object 
-            {
-                poitemid: int
+        update_table_params(data) {
+            if (data.success) {
+                console.log("update_table_params", data)
+                this.table.params['mapid'] = data.data.mapid
             }
-            */
-            $.extend(this.form.params, params)
-            this.clearModal()
-            this.title.text(title)
-            this.form.refresh()
-                .then($.proxy(this, 'show'))
         }
     }
-
     $(function () {
-        var poteminfoTB = new poiteminfoTB({
-            id: "poteminfoTB",
-            url: "/get_poitem_info",
+        var map_tb = new mapTB({
+            id: "mapTB",
+            url: "/get_soitem_poitem_map_info",
             extra_col_elems: [{ "tagName": "button", "classname": "more", "text": "more" }, { "tagName": "button", "classname": "details", "text": "details" }],
-            visible: ["ponum", "description", "vendorpartnum", "qtytofulfill", "etd", "eta"],
-            hidden: ["_poitemid", "id"],
-            searchable: ["ponum", "vendorpartnum", "description", "etd_start", "etd_end", "eta_start", "eta_end"],
+            visible: ["mapid", "sonum", "description", "whs", "salesman", 'customerpo', "ponum", "qty", "mapstatus", "mapcategory"],
+            hidden: ['mapid'],
+            searchable: ["sonum"],
             searchable_type: {
-                "etd_start": "date",
-                "etd_end": "date",
-                "eta_start": "date",
-                "eta_end": "date"
+                // "etd_start": "date",
+                // "etd_end": "date",
+                // "eta_start": "date",
+                // "eta_end": "date"
             },
-            editFormModal: new EditFormModal(
-                {
-                    id: "editModal",
-                },
-                {
-                    id: "editForm",
-                    url_get: "/get_poitem_info",
-                    url_update: "/update_poitem_info",
-                    visible: ['transport', 'priceBeforeNeg', 'priceAfterNeg', 'etd', 'eta', 'coaReq', 'coaCheck', 'labelCheck', 'shippingDoc', 'arrivalNotice', 'Customer', 'mfgBatch', 'nuraBatch', 'shipperQualified', 'qualificationNote', 'qcRelease', 'needNuraCoa', 'mfg', 'lotNuraCoa'],
-                    visible_col_type: {
-                        'etd': 'date',
-                        'eta': 'date',
-                        'lotNuraCoa': 'lotNuraCoaSelect',
-                        'transport': 'transportSelect'
-                    },
-                    customHtmlForInput: {
-                        "lotNuraCoaSelect": `<select class="form-control" id="m_{}" name="{}">
-                                                <option value=""></option>
-                                                <option value="Yes">Yes</option>
-                                                <option value="No">No</option>
-                                             </select>`,
-                        "transportSelect": `<select class="form-control" id="m_{}" name="{}">
-                                        <option value=""></option>
-                                        <option value="Oversea/Sea">Oversea/Sea</option>
-                                        <option value="Oversea/Air">Oversea/Air</option>
-                                        <option value="Domestic">Domestic</option>
-                                        <option value="Vendor clear customs">Vendor clear customs</option>
-                                      </select>`
-                    },
-                    params: {}
-                }),
-            detailListModal: new DetailListModal(
+            detailListModal: new MapDetailListModal(
                 {
                     id: "detailModal",
                 },
                 {
                     id: "detailTable",
-                    url: "/get_po_item_info_details",
+                    url: "/get_soitem_poitem_map_details",
                     visible: ["content", "username", "created"],
-                    hidden: ["id"],
+                    hidden: ["id", "mapid"],
                     limit: 5,
                     refresh_when_created: false
                 },
                 {
                     id: "detailForm",
-                    url: "/add_poiteminfo_detail",
+                    url: "/add_soitem_poitem_map_detail",
                 })
         })
-        poteminfoTB.editFormModal.parent = poteminfoTB
-        poteminfoTB.detailListModal.parent = poteminfoTB
     })
 </script>
 {% endblock %}

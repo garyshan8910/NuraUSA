@@ -94,3 +94,17 @@ CREATE TABLE `nurausa`.`nura_mapping_status` (
   `name` NVARCHAR(45) NULL,
   PRIMARY KEY (`id`));
 
+ALTER TABLE `nurausa`.`nura_soitem_poitem_map` 
+CHANGE COLUMN `WHS` `whs` VARCHAR(45) CHARACTER SET 'utf8' NULL DEFAULT NULL ,
+CHANGE COLUMN `QCRelease` `qcReleased` VARCHAR(45) CHARACTER SET 'utf8' NULL DEFAULT NULL ;
+
+
+CREATE TABLE `nurausa`.`nura_soitem_poitem_map_detail` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `mapid` INT NOT NULL,
+  `userid` INT NOT NULL,
+  `content` NVARCHAR(256) NULL,
+  `created` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE,
+  INDEX `index` (`userid` ASC, `mapid` ASC) VISIBLE);

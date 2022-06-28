@@ -275,3 +275,52 @@ soitemmap_order_by = '''order by allocateTypeId, created'''
 soitemmap_clause_dict = {"so_itemid": "soitem.id = :{}"}
 soitemmap_wildcard_fields = set()
 soitemmap_required_args = set(["so_itemid"])
+
+soitem_poitem_map_base_sql = '''
+    select 
+    so.salesman, 
+    so.num as sonum,
+    so.customerPO as customerPO,
+    so.dateCreated as soCreated,
+    po.num as ponum, 
+    soitem.description,
+    nura_soitem_poitem_map.id as mapid, 
+    nura_soitem_poitem_map.soitemid,
+    nura_soitem_poitem_map.poitemid,
+    nura_soitem_poitem_map.whs,
+    nura_soitem_poitem_map.shipDate, 
+    nura_soitem_poitem_map.shipForEom, 
+    nura_soitem_poitem_map.nuraLot,
+    nura_soitem_poitem_map.mfgBatchLot,
+    nura_soitem_poitem_map.qcReleased,
+    nura_soitem_poitem_map.creditReleased,
+    nura_soitem_poitem_map.needToChangeLabel,
+    nura_soitem_poitem_map.allocateTypeId,
+    nura_soitem_poitem_map.created as mapCreated,
+    nura_soitem_poitem_map.userid,
+    Round(nura_soitem_poitem_map.qty,2) as qty,
+    nura_mapping_status.name as mapStatus,
+    nura_mapping_category.name as mapCategory,
+    assist_user.username
+    from nura_soitem_poitem_map
+    left join soitem on soitem.id = nura_soitem_poitem_map.soitemid
+    left join poitem on poitem.id = nura_soitem_poitem_map.poitemid
+    left join so on so.id = soitem.soid
+    left join po on po.id = poitem.poid
+    left join assist_user on assist_user.id = nura_soitem_poitem_map.userid
+    left join nura_mapping_status on nura_mapping_status.id = nura_soitem_poitem_map.statusId
+    left join nura_mapping_category on nura_mapping_category.id = nura_soitem_poitem_map.categoryId
+'''
+soitem_poitem_map_order_by = '''order by so.id desc, soitem.id '''
+soitem_poitem_map_clause_dict = {"sonum": "so.num = :{}"}
+soitem_poitem_map_wildcard_fields = set()
+soitem_poitem_map_required_args = set([])
+
+soitem_poitem_map_detail_base_sql = '''SELECT nura_soitem_poitem_map_detail.id as mapid, userid, username, content, nura_soitem_poitem_map_detail.created FROM nura_soitem_poitem_map_detail
+    left join assist_user on assist_user.id = userid'''
+soitem_poitem_map_detail_order_by = '''order by nura_soitem_poitem_map_detail.id desc'''
+soitem_poitem_map_detail_clause_dict = {
+    "mapid": "nura_soitem_poitem_map_detail.mapid = :{}"
+}
+soitem_poitem_map_detail_wildcard_fields = set()
+soitem_poitem_map_detail_required_args = set()

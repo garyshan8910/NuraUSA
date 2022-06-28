@@ -4,7 +4,7 @@ from flask_login import login_user, current_user, logout_user, login_required
 from inflect import CONSONANTS
 from sqlalchemy import true
 from nura.forms import LoginForm, RegisterForm, SoForm
-from nura.models import AssistUser, NuraPoItemInfo, NuraPoItemInfoDetail, NuraSoitemPoitemMap, So, Po, to_dict
+from nura.models import AssistUser, NuraPoItemInfo, NuraPoItemInfoDetail, NuraSoitemPoitemMap, NuraSoitemPoitemMapDetail, So, Po, to_dict
 from nura import db
 from nura.query import SQL_STMT, query_result_all, query_result_by_page
 from nura.sopomapSQL import *
@@ -99,13 +99,16 @@ def so_items():
 
 @login_required
 def po_items():
-    # return render_template('poitems.html')
-    return render_template('sopomapping.html')
+    return render_template('poitems.html')
 
 
 @login_required
 def po_item_info():
     return render_template('poiteminfo.html')
+
+@login_required
+def soitem_poitem_map_info():
+    return render_template('soitem_poitem_map_info.html')
 
 
 def get_tables_by_page(sql, params={}):
@@ -276,3 +279,44 @@ def add_poiteminfo_detail():
     db.session.add(obj)
     db.session.commit()
     return jsonify(data=to_dict(NuraPoItemInfoDetail, obj), success=True, message="success")
+
+@login_required
+def get_soitem_poitem_map_info():
+    sql_stmt_obj = SQL_STMT(soitem_poitem_map_base_sql,
+                            soitem_poitem_map_order_by,
+                            request.args,
+                            soitem_poitem_map_clause_dict,
+                            request.args.get("limit", 10, type=int),
+                            request.args.get("page_num", 1, type=int),
+                            soitem_poitem_map_wildcard_fields,
+                            soitem_poitem_map_required_args)
+    total, curr_page, rows = sql_stmt_obj.query_by_page()
+    return jsonify(data=rows, total=total, curr_page=curr_page)
+
+@login_required
+def get_soitem_poitem_map_details():
+    sql_stmt_obj = SQL_STMT(soitem_poitem_map_detail_base_sql,
+                            soitem_poitem_map_detail_order_by,
+                            request.args,
+                            soitem_poitem_map_detail_clause_dict,
+                            request.args.get("limit", 10, type=int),
+                            request.args.get("page_num", 1, type=int),
+                            soitem_poitem_map_detail_wildcard_fields,
+                            soitem_poitem_map_detail_required_args)
+    print(sql_stmt_obj.__dict__)
+    total, curr_page, rows = sql_stmt_obj.query_by_page()
+    return jsonify(data=rows, total=total, curr_page=curr_page)
+
+@login_required
+def add_soitem_poitem_map_detail():
+    request_form = dict(request.form)
+    print(request_form)
+    request_form["userid"] = current_user.get_id()
+    mapid = request_form["mapid"]
+    print(request_form)
+    if not mapid or not db.session.query(NuraSoitemPoitemMap.query.filter(NuraSoitemPoitemMap.id == mapid).exists()).scalar():
+        return jsonify(data={}, success=False, message="mapid is not provided")
+    obj = NuraSoitemPoitemMapDetail(**request_form)
+    db.session.add(obj)
+    db.session.commit()
+    return jsonify(data=to_dict(NuraSoitemPoitemMapDetail, obj), success=True, message="success")

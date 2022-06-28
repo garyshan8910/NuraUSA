@@ -565,3 +565,16 @@ class NuraPoItemInfoDetail(db.Model):
     userid = db.Column(db.Integer, nullable=False)
     content = db.Column(db.VARCHAR(256), nullable=False)
     created = db.Column(db.DateTime, nullable=False, server_default=db.text("CURRENT_TIMESTAMP"))
+
+
+class NuraSoitemPoitemMapDetail(db.Model):
+    __tablename__ = 'nura_soitem_poitem_map_detail'
+    __table_args__ = (
+        db.Index('index', 'userid', 'mapid'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True, unique=True)
+    mapid = db.Column(db.Integer, nullable=False)
+    userid = db.Column(db.Integer, nullable=False)
+    content = db.Column(db.VARCHAR(256))
+    created = db.Column(db.DateTime, server_default=db.text("CURRENT_TIMESTAMP"))
