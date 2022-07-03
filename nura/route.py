@@ -1,10 +1,11 @@
 from email import message
+from sre_constants import SUCCESS
 from flask import jsonify, render_template, redirect, url_for, request
 from flask_login import login_user, current_user, logout_user, login_required
 from inflect import CONSONANTS
 from sqlalchemy import true
 from nura.forms import LoginForm, RegisterForm, SoForm
-from nura.models import AssistUser, NuraPoItemInfo, NuraPoItemInfoDetail, NuraSoitemPoitemMap, NuraSoitemPoitemMapDetail, So, Po, to_dict
+from nura.models import AssistUser, NuraPoItemInfo, NuraPoItemInfoDetail, NuraSoitemPoitemMap, NuraSoitemPoitemMapCategory, NuraSoitemPoitemMapDetail, NuraSoitemPoitemMapStatu, So, Po, to_dict
 from nura import db
 from nura.query import SQL_STMT, query_result_all, query_result_by_page
 from nura.sopomapSQL import *
@@ -105,6 +106,7 @@ def po_items():
 @login_required
 def po_item_info():
     return render_template('poiteminfo.html')
+
 
 @login_required
 def soitem_poitem_map_info():
@@ -280,6 +282,7 @@ def add_poiteminfo_detail():
     db.session.commit()
     return jsonify(data=to_dict(NuraPoItemInfoDetail, obj), success=True, message="success")
 
+
 @login_required
 def get_soitem_poitem_map_info():
     sql_stmt_obj = SQL_STMT(soitem_poitem_map_base_sql,
@@ -293,6 +296,7 @@ def get_soitem_poitem_map_info():
     total, curr_page, rows = sql_stmt_obj.query_by_page()
     return jsonify(data=rows, total=total, curr_page=curr_page)
 
+
 @login_required
 def get_soitem_poitem_map_details():
     sql_stmt_obj = SQL_STMT(soitem_poitem_map_detail_base_sql,
@@ -303,9 +307,10 @@ def get_soitem_poitem_map_details():
                             request.args.get("page_num", 1, type=int),
                             soitem_poitem_map_detail_wildcard_fields,
                             soitem_poitem_map_detail_required_args)
-    print(sql_stmt_obj.__dict__)
+    # print(sql_stmt_obj.__dict__)
     total, curr_page, rows = sql_stmt_obj.query_by_page()
     return jsonify(data=rows, total=total, curr_page=curr_page)
+
 
 @login_required
 def add_soitem_poitem_map_detail():
@@ -320,3 +325,44 @@ def add_soitem_poitem_map_detail():
     db.session.add(obj)
     db.session.commit()
     return jsonify(data=to_dict(NuraSoitemPoitemMapDetail, obj), success=True, message="success")
+
+
+@login_required
+def update_soitem_poitem_map():
+    print(request.form)
+    obj = NuraSoitemPoitemMap(**request.form)
+    if not obj.id or NuraSoitemPoitemMap.query.filter(NuraSoitemPoitemMap.id == obj.id).first() == None:
+        return jsonify(data={}, success=False, message=f"map entry id is not found in DB, id={obj.id}")
+    else:
+        the_obj = NuraSoitemPoitemMap.query.filter(
+            NuraSoitemPoitemMap.id == obj.id).first()
+        if the_obj:
+            for c in NuraSoitemPoitemMap.__table__.columns:
+                if getattr(obj, c.name):
+                    setattr(the_obj, c.name, getattr(obj, c.name))
+        obj = the_obj
+        db.session.commit()
+        sql_stmt_obj = SQL_STMT(soitem_poitem_map_base_sql,
+                                soitem_poitem_map_order_by,
+                                {'id': obj.id},
+                                soitem_poitem_map_clause_dict,
+                                1,
+                                1,
+                                soitem_poitem_map_wildcard_fields,
+                                soitem_poitem_map_required_args)
+        total, curr_page, rows = sql_stmt_obj.query_by_page()
+        return jsonify(data=rows, success=True, message="success")
+
+
+@login_required
+def get_soitem_poitem_map_category():
+    objs = NuraSoitemPoitemMapCategory.query.order_by(
+        NuraSoitemPoitemMapCategory.id).all()
+    return jsonify(data=[to_dict(NuraSoitemPoitemMapCategory, obj) for obj in objs], success=True, message="success")
+
+
+@login_required
+def get_soitem_poitem_map_status():
+    objs = NuraSoitemPoitemMapStatu.query.order_by(
+        NuraSoitemPoitemMapStatu.id).all()
+    return jsonify(data=[to_dict(NuraSoitemPoitemMapStatu, obj) for obj in objs], success=True, message="success")

@@ -5,6 +5,15 @@ Generator.prototype.getId = function () {
 };
 var uid_generator = new Generator()
 
+function getValueIgnoreCase(obj, key) {
+    if (!obj) return ""
+    const asLowercase = key.toLowerCase();
+    var value = obj[Object.keys(obj)
+        .find(k => k.toLowerCase() === asLowercase)
+    ]
+    return value ? value : ""
+}
+
 class TB {
     constructor(settings) {
         this.data = null
@@ -285,7 +294,17 @@ class EF {
     }
     refresh() {
         if (!$.isEmptyObject(this.params)) {
-            return this.fetchData(this.renderForm)
+            var async_promises = []
+            async_promises.push.apply(async_promises, this.initCustomeInput())
+            async_promises.push($.getJSON(this.url_get, this.params))
+            // console.log(async_promises)
+            return Promise.all(async_promises)
+                .then($.proxy(function (listOfData) {
+                    console.log('listOfData', listOfData)
+                    this.renderForm(listOfData[listOfData.length - 1])
+                }, this))
+
+            // return this.fetchData(this.renderForm)
         }
     }
     fetchData(callback) {
@@ -318,9 +337,10 @@ class EF {
             var field = this.visible[i]
             var colType = this.visible_col_type[field]
             var formInputHtml = this.getFormInputHtml(field, colType)
+            var val = getValueIgnoreCase(this.data, field)
             var temp = `<div class="row mb-3">
                 <label for="m_${field}" class="col-sm-3 col-form-label">${field}</label>
-                <span for="m_${field}" class="col-sm-4 col-form-label">${this.data == null ? "" : (this.data[field] == null ? "" : this.data[field])}</span>
+                <span for="m_${field}" class="col-sm-4 col-form-label">${val}</span>
                 <div class="col-sm-5 col-form">
                     ${formInputHtml}
                 </div>
@@ -340,11 +360,67 @@ class EF {
         var html = ""
         if (!colType || !this.htmlForInput[colType]) {
             html = `<input type="text" class="form-control" id="m_${field}" name="${field}"/>`
-        } else {
+        }
+        else if (typeof (this.htmlForInput[colType]) === 'string') {
             html = this.htmlForInput[colType].replaceAll("{}", field)
+        } else if (typeof (this.htmlForInput[colType]) === 'object') {
+            html = this.getFormInputHtmlHelper(colType, field)
+        }
+        return html
+
+    }
+    getFormInputHtmlHelper(colType, field) {
+        /*
+        example of object:
+        { 
+            "url": "", 
+            "tag": "select", 
+            "name": "statusId", 
+            "value": "id", 
+            "text": "name",
+            "data":[] 
+        }
+        */
+        var object = this.htmlForInput[colType]
+        var html = ''
+        if (object['tag'] === 'select') {
+            html += `<select class="form-control" id="m_${field}" name="${object["name"]}">
+                        <option value=""></option>`
+            const valueFieldName = object["value"]
+            const textFieldName = object["text"]
+            for (const i in object['data']) {
+                var item = object['data'][i]
+                html += `<option value="${item[valueFieldName]}">${item[textFieldName]}</option>`
+            }
+            html += `</select>`
         }
         return html
     }
+
+    initCustomeInput() {
+        var async_promises = []
+        var htmlForInput = this.htmlForInput
+        for (const key in htmlForInput) {
+            if (typeof (htmlForInput[key]) === 'object') {
+                // console.log("initCustomeInput", key)
+                var obj = htmlForInput[key]
+                if (obj['url']) {
+                    async_promises.push(
+                        new Promise(function (resolve, reject) {
+                            $.getJSON(obj['url'], function (data) {
+                                // console.log(key, data)
+                                htmlForInput[key]['data'] = data.data
+                                if (!data.success) return reject(data.message)
+                                resolve(data)
+                            })
+                        })
+                    )
+                }
+            }
+        }
+        return async_promises
+    }
+
     generalizeData(data) {
         /*
         process get/post respone
@@ -479,7 +555,6 @@ class MessageBox {
             this.alertDiv.attr("class", 'alert')
             this.messageDiv.css("color", "#fff")
         }, this), 5000);
-        
     }
 }
 
@@ -530,6 +605,38 @@ class DetailListModal extends MD {
         this.clearModal()
         this.title.text(title)
         this.table.refresh()
+            .then($.proxy(this, 'show'))
+    }
+}
+
+class EditFormModal extends MD {
+    constructor(modalSettings, formSettings) {
+        super(modalSettings)
+        this.form = new EF(formSettings)
+        this.bindEvent()
+    }
+    bindEvent() {
+        this.saveBtn.click($.proxy(this, 'onSaveClick'))
+    }
+    onSaveClick() {
+        this.form.update_data()
+            .then($.proxy(this, 'showMessage'))
+            .then($.proxy(this, 'refreshParent'))
+    }
+    showMessage() {
+        this.message.text(this.form.post_message)
+    }
+    showEditFormModal(params, title) {
+        /*
+        params: object 
+        {
+            entity id: int
+        }
+        */
+        $.extend(this.form.params, params)
+        this.clearModal()
+        this.title.text(title)
+        this.form.refresh()
             .then($.proxy(this, 'show'))
     }
 }

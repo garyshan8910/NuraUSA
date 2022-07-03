@@ -299,8 +299,10 @@ soitem_poitem_map_base_sql = '''
     nura_soitem_poitem_map.created as mapCreated,
     nura_soitem_poitem_map.userid,
     Round(nura_soitem_poitem_map.qty,2) as qty,
-    nura_mapping_status.name as mapStatus,
-    nura_mapping_category.name as mapCategory,
+    nura_soitem_poitem_map_status.name as status,
+    nura_soitem_poitem_map.statusId as statusId,
+    nura_soitem_poitem_map_category.name as category,
+    nura_soitem_poitem_map.categoryId as categoryId,
     assist_user.username
     from nura_soitem_poitem_map
     left join soitem on soitem.id = nura_soitem_poitem_map.soitemid
@@ -308,11 +310,14 @@ soitem_poitem_map_base_sql = '''
     left join so on so.id = soitem.soid
     left join po on po.id = poitem.poid
     left join assist_user on assist_user.id = nura_soitem_poitem_map.userid
-    left join nura_mapping_status on nura_mapping_status.id = nura_soitem_poitem_map.statusId
-    left join nura_mapping_category on nura_mapping_category.id = nura_soitem_poitem_map.categoryId
+    left join nura_soitem_poitem_map_status on nura_soitem_poitem_map_status.id = nura_soitem_poitem_map.statusId
+    left join nura_soitem_poitem_map_category on nura_soitem_poitem_map_category.id = nura_soitem_poitem_map.categoryId
 '''
 soitem_poitem_map_order_by = '''order by so.id desc, soitem.id '''
-soitem_poitem_map_clause_dict = {"sonum": "so.num = :{}"}
+soitem_poitem_map_clause_dict = {
+    "sonum": "so.num = :{}",
+    "id": "nura_soitem_poitem_map.id = :{}"
+}
 soitem_poitem_map_wildcard_fields = set()
 soitem_poitem_map_required_args = set([])
 

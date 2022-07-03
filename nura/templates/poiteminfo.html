@@ -163,38 +163,6 @@
         }
     }
 
-    class EditFormModal extends MD {
-        constructor(modalSettings, formSettings) {
-            super(modalSettings)
-            this.form = new EF(formSettings)
-            this.bindEvent()
-        }
-        bindEvent() {
-            this.saveBtn.click($.proxy(this, 'onSaveClick'))
-        }
-        onSaveClick() {
-            this.form.update_data()
-                .then($.proxy(this, 'showMessage'))
-                .then($.proxy(this, 'refreshParent'))
-        }
-        showMessage() {
-            this.message.text(this.form.post_message)
-        }
-        showEditFormModal(params, title) {
-            /*
-            params: object 
-            {
-                poitemid: int
-            }
-            */
-            $.extend(this.form.params, params)
-            this.clearModal()
-            this.title.text(title)
-            this.form.refresh()
-                .then($.proxy(this, 'show'))
-        }
-    }
-
     $(function () {
         var poteminfoTB = new poiteminfoTB({
             id: "poteminfoTB",

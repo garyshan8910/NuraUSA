@@ -143,10 +143,18 @@
         bindRowBtnEvent() {
             var parent = this
             var dlm = this.detailListModal
+            var efm = this.editFormModal
             this.table.on('click', '.details', function () {
                 var mapid = $(this).closest('tr').find("input.mapid").val()
                 dlm.showDetailFormModal({
                     mapid: mapid,
+                }, mapid)
+            })
+
+            this.table.on('click', '.more', function () {
+                var mapid = $(this).closest('tr').find("input.mapid").val()
+                efm.showEditFormModal({
+                    id: mapid,
                 }, mapid)
             })
         }
@@ -168,7 +176,7 @@
             id: "mapTB",
             url: "/get_soitem_poitem_map_info",
             extra_col_elems: [{ "tagName": "button", "classname": "more", "text": "more" }, { "tagName": "button", "classname": "details", "text": "details" }],
-            visible: ["mapid", "sonum", "description", "whs", "salesman", 'customerpo', "ponum", "qty", "mapstatus", "mapcategory"],
+            visible: ["mapid", "sonum", "description", "whs", "salesman", 'customerpo', "ponum", "qty", "status", "category"],
             hidden: ['mapid'],
             searchable: ["sonum"],
             searchable_type: {
@@ -192,8 +200,35 @@
                 {
                     id: "detailForm",
                     url: "/add_soitem_poitem_map_detail",
+                }),
+            editFormModal: new EditFormModal(
+                {
+                    id: "editModal",
+                },
+                {
+                    id: "editForm",
+                    url_get: "/get_soitem_poitem_map_info",
+                    url_update: "/update_soitem_poitem_map",
+                    visible: ["status", "category", "whs", "shipDate", "shipForEom", "nuraLot", "mfgBatchLot", "qcReleased"],
+                    visible_col_type: {
+                        'shipDate': 'date',
+                        'shipForEom': 'shipforeomSelect',
+                        'status': 'statusSelect',
+                        'category': 'categorySelect'
+                    },
+                    customHtmlForInput: {
+                        "shipforeomSelect": `<select class="form-control" id="m_{}" name="{}">
+                                                <option value=""></option>
+                                                <option value="Yes">Yes</option>
+                                                <option value="No">No</option>
+                                             </select>`,
+                        "statusSelect": { "url": "/get_soitem_poitem_map_status", "tag": "select", "name": "statusId", "value": "id", "text": "name" },
+                        "categorySelect": { "url": "/get_soitem_poitem_map_category", "tag": "select", "name": "categoryId", "value": "id", "text": "name" }
+                    },
+                    params: {}
                 })
         })
+        map_tb.editFormModal.parent = map_tb
     })
 </script>
 {% endblock %}

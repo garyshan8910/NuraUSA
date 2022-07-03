@@ -108,3 +108,20 @@ CREATE TABLE `nurausa`.`nura_soitem_poitem_map_detail` (
   PRIMARY KEY (`id`),
   UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE,
   INDEX `index` (`userid` ASC, `mapid` ASC) VISIBLE);
+
+CREATE TABLE `nurausa`.`nura_soitem_poitem_map_category` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `name` NVARCHAR(45) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `idnura_soitem_poitem_map_category_UNIQUE` (`id` ASC) VISIBLE,
+  UNIQUE INDEX `name_UNIQUE` (`name` ASC) VISIBLE);
+
+CREATE TABLE `nurausa`.`nura_soitem_poitem_map_status` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `name` NVARCHAR(45) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `idnew_table_UNIQUE` (`id` ASC) VISIBLE,
+  UNIQUE INDEX `name_UNIQUE` (`name` ASC) VISIBLE);
+
+ALTER TABLE `nurausa`.`nura_soitem_poitem_map` 
+CHANGE COLUMN `shipForEom` `shipForEom` VARCHAR(10) NULL DEFAULT NULL ;
