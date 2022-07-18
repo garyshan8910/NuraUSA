@@ -1,0 +1,112 @@
+CREATE TABLE `assist_user` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `username` varchar(255) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `active` int NOT NULL,
+  PRIMARY KEY (`id`)
+);
+
+CREATE TABLE `nura_po_item_info` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `poitemid` int NOT NULL,
+  `transport` varchar(45) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `priceBeforeNeg` decimal(28,2) DEFAULT NULL,
+  `priceAfterNeg` decimal(28,2) DEFAULT NULL,
+  `etd` datetime DEFAULT NULL,
+  `eta` datetime DEFAULT NULL,
+  `coaReq` varchar(45) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `coaCheck` varchar(45) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `labelCheck` varchar(45) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `shippingDoc` varchar(45) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `arrivalNotice` varchar(45) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `Customer` varchar(45) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `mfgBatch` varchar(45) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `nuraBatch` varchar(45) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `shipperQualified` varchar(45) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `qualificationNote` varchar(45) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `qcRelease` varchar(45) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `needNuraCoa` varchar(45) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `mfg` varchar(45) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `lotNuraCoa` varchar(10) DEFAULT NULL,
+  PRIMARY KEY (`id`,`poitemid`),
+  UNIQUE KEY `id_nura_po_item_UNIQUE` (`id` DESC),
+  UNIQUE KEY `poitemid_UNIQUE` (`poitemid` DESC),
+  KEY `index` (`poitemid` DESC)
+);
+
+CREATE TABLE `nura_po_item_info_detail` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `poiteminfoid` int NOT NULL,
+  `userid` int NOT NULL,
+  `content` varchar(256) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `int_UNIQUE` (`id`),
+  KEY `index` (`poiteminfoid` DESC,`userid`)
+) ;
+
+CREATE TABLE `nura_soitem_poitem_map` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `soitemid` int NOT NULL,
+  `poitemid` int DEFAULT NULL,
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `qty` decimal(28,9) NOT NULL,
+  `userid` int NOT NULL,
+  `allocateTypeId` int NOT NULL,
+  `whs` varchar(45) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `shipDate` datetime DEFAULT NULL,
+  `shipForEom` varchar(10) DEFAULT NULL,
+  `nuraLot` varchar(45) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `mfgBatchLot` varchar(45) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `qcReleased` varchar(45) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `creditReleased` varchar(45) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `needToChangeLabel` varchar(45) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `categoryId` int NOT NULL DEFAULT '0',
+  `statusId` int NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id_UNIQUE` (`id` DESC),
+  KEY `index` (`soitemid` DESC,`poitemid` DESC,`allocateTypeId`,`categoryId`,`statusId`)
+);
+
+CREATE TABLE `nura_soitem_poitem_map_category` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(45) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idnura_soitem_poitem_map_category_UNIQUE` (`id`),
+  UNIQUE KEY `name_UNIQUE` (`name`)
+) 
+
+CREATE TABLE `nura_soitem_poitem_map_detail` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `mapid` int NOT NULL,
+  `userid` int NOT NULL,
+  `content` varchar(256) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `created` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id_UNIQUE` (`id`),
+  KEY `index` (`userid`,`mapid`)
+) ;
+
+CREATE TABLE `nura_soitem_poitem_map_status` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(45) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idnew_table_UNIQUE` (`id`),
+  UNIQUE KEY `name_UNIQUE` (`name`)
+) ;
+
+
+INSERT INTO `nurausa`.`nura_soitem_poitem_map_category` (`id`, `name`) VALUES ('1', 'Order fulfillment');
+INSERT INTO `nurausa`.`nura_soitem_poitem_map_category` (`id`, `name`) VALUES ('2', 'Purchasing');
+INSERT INTO `nurausa`.`nura_soitem_poitem_map_category` (`id`, `name`) VALUES ('3', 'Quality Control');
+INSERT INTO `nurausa`.`nura_soitem_poitem_map_category` (`id`, `name`) VALUES ('4', 'Ready to ship');
+INSERT INTO `nurausa`.`nura_soitem_poitem_map_category` (`id`, `name`) VALUES ('5', 'Sales');
+
+INSERT INTO `nurausa`.`nura_soitem_poitem_map_status` (`id`, `name`) VALUES ('1', 'Pending Management Approval');
+INSERT INTO `nurausa`.`nura_soitem_poitem_map_status` (`id`, `name`) VALUES ('2', 'Pending Credit Approval');
+INSERT INTO `nurausa`.`nura_soitem_poitem_map_status` (`id`, `name`) VALUES ('3', 'Pending QC Release');
+INSERT INTO `nurausa`.`nura_soitem_poitem_map_status` (`id`, `name`) VALUES ('4', 'In Stock');
+INSERT INTO `nurausa`.`nura_soitem_poitem_map_status` (`id`, `name`) VALUES ('5', 'Need Info from Sales');
+INSERT INTO `nurausa`.`nura_soitem_poitem_map_status` (`id`, `name`) VALUES ('6', 'Blanket awaiting Release');
+INSERT INTO `nurausa`.`nura_soitem_poitem_map_status` (`id`, `name`) VALUES ('7', 'Credit Release');

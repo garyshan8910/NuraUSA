@@ -41,12 +41,43 @@ class TB {
 
         if (this.has_fixed_html) {
             this.setupDom()
-            this.renderSearchForm()
             if (this.refresh_when_created) this.refresh()
             this.bindPagerEvent()
             this.bindSearchBarBtnsEvent()
         }
+
+        var async_promises = []
+        async_promises.push.apply(async_promises, this.initCustomeInput())
+        Promise.all(async_promises)
+            .then($.proxy(function (listOfData) {
+                if (this.has_fixed_html) {
+                    this.renderSearchForm()
+                }
+            }, this))
     }
+
+    initCustomeInput() {
+        var async_promises = []
+        var searchable_html = this.searchable_html
+        for (const key in searchable_html) {
+            if (typeof (searchable_html[key]) === 'object') {
+                var obj = searchable_html[key]
+                if (obj['url']) {
+                    async_promises.push(
+                        new Promise(function (resolve, reject) {
+                            $.getJSON(obj['url'], function (data) {
+                                searchable_html[key]['data'] = data.data
+                                if (!data.success) return reject(data.message)
+                                resolve(data)
+                            })
+                        })
+                    )
+                }
+            }
+        }
+        return async_promises
+    }
+
     setupDom() {
         this.table = $(`#${this.id} table`).eq(0)
         this.pager = $(`#${this.id} nav.pager`).eq(0)
@@ -68,6 +99,7 @@ class TB {
             for (const i in this.searchable) {
                 var field = this.searchable[i]
                 var fieldType = this.searchable_type[field]
+                var fieldTypeHtml = this.searchable_html[fieldType]
                 if (!fieldType) {
                     html +=
                         `<div class="col">
@@ -76,8 +108,17 @@ class TB {
                             </label>
                         </div>`
                 }
-                else {
+                else if (typeof (fieldTypeHtml) === "string") {
                     var fieldTypeHtml = this.searchable_html[fieldType].replaceAll("{}", field)
+                    html +=
+                        `<div class="col">
+                            <label class="form-label">${field}
+                                ${fieldTypeHtml}
+                            </label>
+                        </div>`
+                }
+                else if (typeof (fieldTypeHtml) === "object") {
+                    let fieldTypeHtml = this.getSearchFormInput(fieldType, field)
                     html +=
                         `<div class="col">
                             <label class="form-label">${field}
@@ -92,6 +133,23 @@ class TB {
         else {
             this.searchDiv.hide()
         }
+    }
+    getSearchFormInput(fieldType, field) {
+        var object = this.searchable_html[fieldType]
+        var html = ''
+        if (object['tag'] === 'select') {
+            html += `<select class="form-control" id = "m_${field}" name = "${object["name"]}" >
+                        <option value=""></option>`
+            const valueFieldName = object["value"]
+            const textFieldName = object["text"]
+            for (const i in object['data']) {
+                var item = object['data'][i]
+                html += `<option value = "${item[valueFieldName]}" > ${item[textFieldName]}</option > `
+            }
+            html += `</select > `
+        }
+        return html
+
     }
     updateData(data) {
         /*
@@ -153,7 +211,7 @@ class TB {
     }
     getSearchParams() {
         var params = {}
-        this.searchForm.find('input, textarea').each(function () {
+        this.searchForm.find('input, textarea, select').each(function () {
             var value = $(this).val().trim()
             if (value && value != "") {
                 params[this.name] = value
@@ -300,7 +358,7 @@ class EF {
             // console.log(async_promises)
             return Promise.all(async_promises)
                 .then($.proxy(function (listOfData) {
-                    console.log('listOfData', listOfData)
+                    // console.log('listOfData', listOfData)
                     this.renderForm(listOfData[listOfData.length - 1])
                 }, this))
 

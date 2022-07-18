@@ -1,6 +1,6 @@
 import copy
+import re
 
-from inflect import CONSONANTS
 from nura import db
 from nura.sopomapSQL import sql_soitem_map
 
@@ -133,7 +133,8 @@ class SQL_STMT:
                  required_args):
         self.base_sql = base_sql.lower()
         self.order_by = order_by
-        self.request_args = request_args
+        self.request_args = {}
+        self.proces_request_args(request_args)
         self.clause_dict = clause_dict
         self.limit = limit
         self.page_num = page_num
@@ -150,6 +151,17 @@ class SQL_STMT:
         self.clauses_str = ""
         self.get_sql_and_clauses_str()
         self.get_total()
+
+    def proces_request_args(self, request_args):
+        if type(request_args) == type({}): 
+            self.request_args = request_args
+            return
+        for k in request_args:
+            if len(request_args.getlist(k)) > 1:
+                self.request_args[k.replace(
+                    '[]', '')] = request_args.getlist(k)
+            else:
+                self.request_args[k] = request_args[k]
 
     def get_clauses(self):
         for key in self.request_args.keys():

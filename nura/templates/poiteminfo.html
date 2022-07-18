@@ -142,7 +142,7 @@
         bindRowBtnEvent() {
             var parent = this
             var efm = this.editFormModal
-            this.table.on('click', '.more', function () {
+            this.table.on('click', '.detail', function () {
                 var poitem_id = $(this).closest('tr').find("input._poitemid").val()
                 var ponum = $(this).closest('tr').find("td.ponum").text()
                 var description = $(this).closest('tr').find("td.description").text()
@@ -152,7 +152,7 @@
                 }, `${ponum} ${description}`)
             })
             var dlm = this.detailListModal
-            this.table.on('click', '.details', function () {
+            this.table.on('click', '.notes', function () {
                 var poitem_id = $(this).closest('tr').find("input._poitemid").val()
                 var poiteminfoid = $(this).closest('tr').find("input.id").val()
                 dlm.showDetailFormModal({
@@ -167,7 +167,7 @@
         var poteminfoTB = new poiteminfoTB({
             id: "poteminfoTB",
             url: "/get_poitem_info",
-            extra_col_elems: [{ "tagName": "button", "classname": "more", "text": "more" }, { "tagName": "button", "classname": "details", "text": "details" }],
+            extra_col_elems: [{ "tagName": "button", "classname": "detail", "text": "detail" }, { "tagName": "button", "classname": "notes", "text": "notes" }],
             visible: ["ponum", "description", "vendorpartnum", "qtytofulfill", "etd", "eta"],
             hidden: ["_poitemid", "id"],
             searchable: ["ponum", "vendorpartnum", "description", "etd_start", "etd_end", "eta_start", "eta_end"],

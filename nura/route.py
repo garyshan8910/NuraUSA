@@ -258,7 +258,6 @@ def get_po_item_info_details():
                             request.args.get("page_num", 1, type=int),
                             poiteminfo_detail_wildcard_fields,
                             poiteminfo_detail_required_args)
-    print(sql_stmt_obj.__dict__)
     total, curr_page, rows = sql_stmt_obj.query_by_page()
     return jsonify(data=rows, total=total, curr_page=curr_page)
 
@@ -272,11 +271,15 @@ def add_poiteminfo_detail():
     poiteminfoid = request_form["poiteminfoid"]
     print(request_form)
     if not poiteminfoid or not db.session.query(NuraPoItemInfo.query.filter(NuraPoItemInfo.id == poiteminfoid).exists()).scalar():
-        poiteminfo_obj = NuraPoItemInfo(**{"poitemid": poitemid})
-        db.session.add(poiteminfo_obj)
-        # 获取插入poiteminfo_obj后的ID
-        db.session.flush()
-        request_form["poiteminfoid"] = poiteminfo_obj.id
+        if not db.session.query(NuraPoItemInfo.query.filter(NuraPoItemInfo.poitemid == poitemid).exists()).scalar():
+            poiteminfo_obj = NuraPoItemInfo(**{"poitemid": poitemid})
+            db.session.add(poiteminfo_obj)
+            # 获取插入poiteminfo_obj后的ID
+            db.session.flush()
+            request_form["poiteminfoid"] = poiteminfo_obj.id
+        else:
+            poiteminfo_obj = NuraPoItemInfo.query.filter(NuraPoItemInfo.poitemid == poitemid).first()
+            request_form["poiteminfoid"] = poiteminfo_obj.id
     obj = NuraPoItemInfoDetail(**request_form)
     db.session.add(obj)
     db.session.commit()

@@ -258,11 +258,17 @@ inventory_clause_dict = {
 inventory_wildcard_fields = set()
 inventory_required_args = set(["partId"])
 
-poitem_base_sql = '''select poitem.id poitemid, po.num poNum, poitem.description, ROUND(qtyToFulfill,2) qtyToFulfill, ROUND(qtyFulfilled,2) qtyFulfilled, postatus.name status from po
-    left join poitem on poitem.poid = po.id
-    left join postatus on postatus.id = po.statusId'''
+poitem_base_sql = '''select poitem.id poitemid, po.num poNum, poitem.description, ROUND(qtyToFulfill,2) qtyToFulfill, ROUND(qtyFulfilled,2) qtyFulfilled, postatus.name status, coalesce(round(mapsum.mapqty,2), 0) mapqty from po
+left join poitem on poitem.poid = po.id
+left join postatus on postatus.id = po.statusId
+left join (
+select poitemid, sum(qty) mapqty from nura_soitem_poitem_map where poitemid is not null group by poitemid 
+) mapsum on mapsum.poitemid = poitem.id'''
 poitem_order_by = '''order by po.id desc, poitem.id'''
-poitem_clause_dict = {"partId": "poitem.partId = :{}"}
+poitem_clause_dict = {
+    "partId": "poitem.partId = :{}",
+    "status_in": "postatus.name in :{}"
+}
 poitem_wildcard_fields = set()
 poitem_required_args = set(["partId"])
 
@@ -284,6 +290,7 @@ soitem_poitem_map_base_sql = '''
     so.dateCreated as soCreated,
     po.num as ponum, 
     soitem.description,
+    soitem.productNum,
     nura_soitem_poitem_map.id as mapid, 
     nura_soitem_poitem_map.soitemid,
     nura_soitem_poitem_map.poitemid,
@@ -303,6 +310,7 @@ soitem_poitem_map_base_sql = '''
     nura_soitem_poitem_map.statusId as statusId,
     nura_soitem_poitem_map_category.name as category,
     nura_soitem_poitem_map.categoryId as categoryId,
+    nura_po_item_info.id as poiteminfoid,
     assist_user.username
     from nura_soitem_poitem_map
     left join soitem on soitem.id = nura_soitem_poitem_map.soitemid
@@ -312,13 +320,21 @@ soitem_poitem_map_base_sql = '''
     left join assist_user on assist_user.id = nura_soitem_poitem_map.userid
     left join nura_soitem_poitem_map_status on nura_soitem_poitem_map_status.id = nura_soitem_poitem_map.statusId
     left join nura_soitem_poitem_map_category on nura_soitem_poitem_map_category.id = nura_soitem_poitem_map.categoryId
+    left join nura_po_item_info on nura_po_item_info.poitemid = nura_soitem_poitem_map.poitemid
 '''
 soitem_poitem_map_order_by = '''order by so.id desc, soitem.id '''
 soitem_poitem_map_clause_dict = {
     "sonum": "so.num = :{}",
-    "id": "nura_soitem_poitem_map.id = :{}"
+    "ponum": "po.num = :{}",
+    "description": "soitem.description like :{}",
+    "productnum": "soitem.productNum like :{}",
+    "salesman": "so.salesman like :{}",
+    "customerpo": "so.customerPO like :{}", 
+    "id": "nura_soitem_poitem_map.id = :{}",
+    "statusId": "nura_soitem_poitem_map.statusId = :{}",
+    "categoryId": "nura_soitem_poitem_map.categoryId = :{}",
 }
-soitem_poitem_map_wildcard_fields = set()
+soitem_poitem_map_wildcard_fields = set(["description","productnum","salesman","customerpo"])
 soitem_poitem_map_required_args = set([])
 
 soitem_poitem_map_detail_base_sql = '''SELECT nura_soitem_poitem_map_detail.id as mapid, userid, username, content, nura_soitem_poitem_map_detail.created FROM nura_soitem_poitem_map_detail

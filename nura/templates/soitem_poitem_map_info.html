@@ -129,6 +129,94 @@
             </div>
         </div>
     </div>
+
+    <div id="poeditModal" class="modal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="poeditForm">
+                        <form class="edit-form"></form>
+                        <div class="hidden-field"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="message alert" role="alert"></div>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary save-form">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="podetailModal" class="modal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="podetailTable">
+                        <div class="search" style="display: none;">
+                            <form class="search-form">
+                            </form>
+                            <button type="button" class="btn btn-primary search-btn">search</button>
+                            <button type="button" class="btn-sm btn-info reset-btn">reset</button>
+                        </div>
+                        <table class="table table-striped table-sm">
+                            <thead></thead>
+                            <tbody></tbody>
+                        </table>
+                        <nav class="pager" aria-label="Page navigation" style="display: none">
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item"><a class="page-link">total <span class="total-items"></span>
+                                        items</a></li>
+                                <li class="page-item">
+                                    <a class="page-link pre-page" href="#" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                        <span class="sr-only"></span>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <input class="form-control page-num" type="text"
+                                        style="width: 65px; text-align: center;" value="1">
+                                </li>
+                                <li class="page-item"><a class="page-link" href="#">/ <span
+                                            class="total-page">100</span></a></li>
+                                <li class="page-item"><a class="page-link goto-page" href="#">Go</a></li>
+                                <li class="page-item">
+                                    <a class="page-link next-page" href="#" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                        <span class="sr-only"></span>
+                                    </a>
+                                </li>
+                                <input type="hidden" class="params" />
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div id="podetailForm">
+                        <form class="row">
+                            <div class="col-auto">
+                                <textarea name="content" placeholder="content" class="form-control content"
+                                    rows="3"></textarea>
+                            </div>
+                            <div class="col-auto">
+                                <div class="alert" role="alert"></div>
+                            </div>
+                        </form>
+                    </div>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary save-form">Add new detail</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 {% block scripts %}
@@ -142,20 +230,44 @@
         }
         bindRowBtnEvent() {
             var parent = this
-            var dlm = this.detailListModal
-            var efm = this.editFormModal
-            this.table.on('click', '.details', function () {
+            var mdlm = this.mapDetailListModal
+            var mefm = this.mapEditFormModal
+            var pdlm = this.poitemDetailListModal
+            var pefm = this.poitemEditFormModal
+            this.table.on('click', '.mapping-notes', function () {
                 var mapid = $(this).closest('tr').find("input.mapid").val()
-                dlm.showDetailFormModal({
+                mdlm.showDetailFormModal({
                     mapid: mapid,
-                }, mapid)
+                }, `mapping notes # ${mapid}`)
             })
 
-            this.table.on('click', '.more', function () {
+            this.table.on('click', '.mapping-detail', function () {
                 var mapid = $(this).closest('tr').find("input.mapid").val()
-                efm.showEditFormModal({
+                mefm.showEditFormModal({
                     id: mapid,
-                }, mapid)
+                }, `mapping detail # ${mapid}`)
+            })
+
+            this.table.on('click', '.poitem-notes', function () {
+                var poitemid = $(this).closest('tr').find("input.poitemid").val()
+                var poiteminfoid = $(this).closest('tr').find("input.poiteminfoid").val()
+                var ponum = $(this).closest('tr').find("input.ponum").val()
+                if (poitemid) {
+                    pdlm.showDetailFormModal({
+                        poitemid: poitemid,
+                        poiteminfoid: poiteminfoid
+                    }, `poitem notes #${ponum}-${poitemid}`)
+                }
+            })
+
+            this.table.on('click', '.poitem-detail', function () {
+                var poitemid = $(this).closest('tr').find("input.poitemid").val()
+                var ponum = $(this).closest('tr').find("input.ponum").val()
+                if (poitemid) {
+                    pefm.showEditFormModal({
+                        poitemid: poitemid,
+                    }, `poitem detail #${ponum}-${poitemid}`)
+                }
             })
         }
     }
@@ -175,17 +287,28 @@
         var map_tb = new mapTB({
             id: "mapTB",
             url: "/get_soitem_poitem_map_info",
-            extra_col_elems: [{ "tagName": "button", "classname": "more", "text": "more" }, { "tagName": "button", "classname": "details", "text": "details" }],
-            visible: ["mapid", "sonum", "description", "whs", "salesman", 'customerpo', "ponum", "qty", "status", "category"],
-            hidden: ['mapid'],
-            searchable: ["sonum"],
+            extra_col_elems: [
+                { "tagName": "button", "classname": "mapping-detail", "text": "mapping detail" },
+                { "tagName": "button", "classname": "mapping-notes", "text": "mapping notes" },
+                { "tagName": "button", "classname": "poitem-detail", "text": "poitem detail" },
+                { "tagName": "button", "classname": "poitem-notes", "text": "poitem notes" }
+            ],
+            visible: ["mapid", "sonum", "description", "productnum", "whs", "salesman", 'customerpo', "ponum", "qty", "status", "category"],
+            hidden: ['mapid', 'poitemid', 'ponum', 'poiteminfoid'],
+            searchable: ["sonum", "ponum", "description", "productnum", "salesman", "customerpo", "status", "category"],
             searchable_type: {
+                "status": "statusSelect", 
+                "category": "categorySelect"
                 // "etd_start": "date",
                 // "etd_end": "date",
                 // "eta_start": "date",
                 // "eta_end": "date"
             },
-            detailListModal: new MapDetailListModal(
+            custom_searchable_html: {
+                "statusSelect": { "url": "/get_soitem_poitem_map_status", "tag": "select", "name": "statusId", "value": "id", "text": "name" },
+                "categorySelect": { "url": "/get_soitem_poitem_map_category", "tag": "select", "name": "categoryId", "value": "id", "text": "name" }
+            },
+            mapDetailListModal: new MapDetailListModal(
                 {
                     id: "detailModal",
                 },
@@ -201,7 +324,7 @@
                     id: "detailForm",
                     url: "/add_soitem_poitem_map_detail",
                 }),
-            editFormModal: new EditFormModal(
+            mapEditFormModal: new EditFormModal(
                 {
                     id: "editModal",
                 },
@@ -226,9 +349,56 @@
                         "categorySelect": { "url": "/get_soitem_poitem_map_category", "tag": "select", "name": "categoryId", "value": "id", "text": "name" }
                     },
                     params: {}
+                }),
+            poitemEditFormModal: new EditFormModal(
+                {
+                    id: "poeditModal",
+                },
+                {
+                    id: "poeditForm",
+                    url_get: "/get_poitem_info",
+                    url_update: "/update_poitem_info",
+                    visible: ['transport', 'priceBeforeNeg', 'priceAfterNeg', 'etd', 'eta', 'coaReq', 'coaCheck', 'labelCheck', 'shippingDoc', 'arrivalNotice', 'Customer', 'mfgBatch', 'nuraBatch', 'shipperQualified', 'qualificationNote', 'qcRelease', 'needNuraCoa', 'mfg', 'lotNuraCoa'],
+                    visible_col_type: {
+                        'etd': 'date',
+                        'eta': 'date',
+                        'lotNuraCoa': 'lotNuraCoaSelect',
+                        'transport': 'transportSelect'
+                    },
+                    customHtmlForInput: {
+                        "lotNuraCoaSelect": `<select class="form-control" id="m_{}" name="{}">
+                                                <option value=""></option>
+                                                <option value="Yes">Yes</option>
+                                                <option value="No">No</option>
+                                             </select>`,
+                        "transportSelect": `<select class="form-control" id="m_{}" name="{}">
+                                        <option value=""></option>
+                                        <option value="Oversea/Sea">Oversea/Sea</option>
+                                        <option value="Oversea/Air">Oversea/Air</option>
+                                        <option value="Domestic">Domestic</option>
+                                        <option value="Vendor clear customs">Vendor clear customs</option>
+                                      </select>`
+                    },
+                    params: {}
+                }),
+            poitemDetailListModal: new DetailListModal(
+                {
+                    id: "podetailModal",
+                },
+                {
+                    id: "podetailTable",
+                    url: "/get_po_item_info_details",
+                    visible: ["content", "username", "created"],
+                    hidden: ["id"],
+                    limit: 5,
+                    refresh_when_created: false
+                },
+                {
+                    id: "podetailForm",
+                    url: "/add_poiteminfo_detail",
                 })
         })
-        map_tb.editFormModal.parent = map_tb
+        map_tb.mapEditFormModal.parent = map_tb
     })
 </script>
 {% endblock %}

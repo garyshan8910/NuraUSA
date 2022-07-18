@@ -3,7 +3,7 @@
 {% block content %}
 <div class="container justify-content-center">
     <div class="row">
-        <div class="col">
+        <div class="col-lg-6">
             <div id="soitemTB">
                 <div class="search" style="display: none;">
                     <form class="search-form">
@@ -45,7 +45,7 @@
                 </nav>
             </div>
         </div>
-        <div class="col">
+        <div class="col-lg-6">
             <div id="allocate-alert">
                 <div class="alert" role="alert" style="display:block; ">
                     <div class="message" style="color: #fff;"></div>
@@ -304,7 +304,7 @@
         constructor(settings) {
             super(settings)
             this.soitemid = 0
-            this.params = { "partId": 0 }
+            this.params = {}
             this.post_params = {
                 "qty": null,
                 "so_item_id": null,
@@ -334,6 +334,7 @@
                                 soitemTB.refreshAccordion(poitemTB.soitemid)
                                 // show alert message
                                 poitemTB.messageBox.showMessage(data.message, "success")
+                                poitemTB.refresh()
                             }
                         }).fail(function (jqxhr, textStatus, error) {
                             console.log("jqxhr", jqxhr)
@@ -371,8 +372,9 @@
         var poitemTB = new POITEMTB({
             id: "poitemTB",
             url: "/get_po_items",
+            params: { "partId": 0, "status_in": ['Issued', 'Partial'] },
             post_url: "/create_soitem_poitem_map_record",
-            visible: ["ponum", "qtytofulfill", "qtyfulfilled", "status"],
+            visible: ["ponum", "qtytofulfill", "qtyfulfilled", "status", "mapqty"],
             hidden: ["poitemid"],
             extra_col_elems: [{ "tagName": "input", "classname": "allocate_input", "text": "" }, { "tagName": "button", "classname": "allocate_po_item", "text": "allocate" }],
             po_items_limit: 5,
