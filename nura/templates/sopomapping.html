@@ -385,10 +385,19 @@
         var soitemTB = new SOITEMTB({
             id: "soitemTB",
             url: "/get_so_items",
-            visible: ["partnum", "productnum", "description", "qtyordered", "sonum"],
+            visible: ["partnum", "productnum", "description", "qtyordered", "sonum", "mapqty"],
             hidden: ["partid", "soitemid"],
-            searchable: ["partnum", "sonum", "description"],
-            searchable_type: {},
+            searchable: ["partnum", "sonum", "description", "mapqty"],
+            searchable_type: { "mapqty": "mapqtyselect" },
+            custom_searchable_html: {
+                "mapqtyselect": `<select class="form-control" name="RAW_{}">
+                                    <option value=""></option>
+                                    <option value="= qtyOrdered">equal</option>
+                                    <option value="> qtyOrdered">> qtyOrdered</option>
+                                    <option value="< qtyOrdered">< qtyOrdered</option>
+                                    <option value="is null">no map</option>
+                                </select>`
+            },
             extra_row_elems: `<input type="hidden" class="mapping-records" />`,
             inventoryTB: inventoryTB,
             poitemTB: poitemTB

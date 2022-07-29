@@ -152,6 +152,7 @@ class SQL_STMT:
         self.get_sql_and_clauses_str()
         self.get_total()
 
+
     def proces_request_args(self, request_args):
         if type(request_args) == type({}): 
             self.request_args = request_args
@@ -166,8 +167,20 @@ class SQL_STMT:
     def get_clauses(self):
         for key in self.request_args.keys():
             clause = self.clause_dict.get(key, "")
-            if clause:
+            if clause and not key.startswith("RAW_"):
                 self.clauses.append(clause.format(key))
+            elif clause and key.startswith("RAW_"):
+                '''
+                用于request_args请求值是子句的一部分, 而非变量/字符串的情况, 直接生成查询子句 
+                比如: 
+                clause_dict = {
+                    "RAW_mapqty": "map_records.mapqty :{}"
+                }
+                传入的请求参数 request_args["RAW_mapqty"] = "= qtyOrdered"
+                生成查询子句:
+                "map_records.mapqty = qtyOrdered"
+                '''
+                self.clauses.append(clause.replace(":{}",self.request_args[key]))
 
     def get_value_dict(self):
         for key, value in self.request_args.items():

@@ -183,12 +183,12 @@ poiteminfo_detail_clause_dict = {
 poiteminfo_detail_wildcard_fields = set()
 poiteminfo_detail_required_args = set()
 
-soitem_base_sql = '''select soitem.id soitemid, so.num soNum, part.num partNum, ROUND(qtyOrdered,2) qtyOrdered, part.id partId, part.description, product.num productnum, map_records.mapcnt from so
+soitem_base_sql = '''select soitem.id soitemid, so.num soNum, part.num partNum, ROUND(qtyOrdered,2) qtyOrdered, part.id partId, part.description, product.num productnum, map_records.mapqty from so
     join soitem on soitem.soid = so.id
     left join product on soitem.productId = product.id
     left join part on part.id = product.partId
     left join (
-    select soitemid, count(1) mapcnt from nura_soitem_poitem_map
+    select soitemid, ROUND(sum(qty), 2) mapqty from nura_soitem_poitem_map
     group by soitemid
     ) as map_records on map_records.soitemid = soitem.id
     '''
@@ -196,7 +196,9 @@ soitem_order_by = '''order by so.id desc, soitem.id'''
 soitem_clause_dict = {
     "partnum": "part.num = :{}",
     "sonum": " so.num = :{}",
-    "description": 'part.description like :{}'
+    "description": 'part.description like :{}',
+    "RAW_mapqty": "map_records.mapqty :{}",
+
 }
 soitem_wildcard_fields = set(["description"])
 soitem_required_args = set()
