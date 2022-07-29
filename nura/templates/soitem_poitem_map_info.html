@@ -293,11 +293,11 @@
                 { "tagName": "button", "classname": "poitem-detail", "text": "poitem detail" },
                 { "tagName": "button", "classname": "poitem-notes", "text": "poitem notes" }
             ],
-            visible: ["mapid", "sonum", "description", "productnum", "whs", "salesman", 'customerpo', "ponum", "qty", "status", "category"],
+            visible: ["mapid", "sonum", "description", "productnum", "whs", "salesman", 'customerpo', "ponum", "qty", "status", "category", "createuser"],
             hidden: ['mapid', 'poitemid', 'ponum', 'poiteminfoid'],
-            searchable: ["sonum", "ponum", "description", "productnum", "salesman", "customerpo", "status", "category"],
+            searchable: ["sonum", "ponum", "description", "productnum", "salesman", "customerpo", "status", "category", "createuser"],
             searchable_type: {
-                "status": "statusSelect", 
+                "status": "statusSelect",
                 "category": "categorySelect"
                 // "etd_start": "date",
                 // "etd_end": "date",
@@ -332,9 +332,11 @@
                     id: "editForm",
                     url_get: "/get_soitem_poitem_map_info",
                     url_update: "/update_soitem_poitem_map",
-                    visible: ["status", "category", "whs", "shipDate", "shipForEom", "nuraLot", "mfgBatchLot", "qcReleased"],
+                    visible: ["status", "category", "whs", "shipDate", "dueDate", "promiseDate", "shipForEom", "nuraLot", "mfgBatchLot", "qcReleased"],
                     visible_col_type: {
+                        'dueDate': 'date',
                         'shipDate': 'date',
+                        'promiseDate': 'date',
                         'shipForEom': 'shipforeomSelect',
                         'status': 'statusSelect',
                         'category': 'categorySelect'

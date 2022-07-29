@@ -540,6 +540,9 @@ class NuraSoitemPoitemMap(db.Model):
     needToChangeLabel = db.Column(db.VARCHAR(45))
     categoryId = db.Column(db.Integer, nullable=False, server_default=db.text("'0'"))
     statusId = db.Column(db.Integer, nullable=False, server_default=db.text("'0'"))
+    closed = db.Column(db.VARCHAR(10))
+    dueDate = db.Column(db.DateTime)
+    promiseDate = db.Column(db.DateTime)
 
 
 class NuraPoItemInfo(db.Model):
@@ -566,6 +569,7 @@ class NuraPoItemInfo(db.Model):
     needNuraCoa = db.Column(db.VARCHAR(45))
     mfg = db.Column(db.VARCHAR(45))
     lotNuraCoa = db.Column(db.VARCHAR(45))
+    fdaReleased = db.Column(db.VARCHAR(10))
 
 class NuraPoItemInfoDetail(db.Model):
     __tablename__ = 'nura_po_item_info_detail'

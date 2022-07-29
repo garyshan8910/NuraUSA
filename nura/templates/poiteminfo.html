@@ -185,12 +185,13 @@
                     id: "editForm",
                     url_get: "/get_poitem_info",
                     url_update: "/update_poitem_info",
-                    visible: ['transport', 'priceBeforeNeg', 'priceAfterNeg', 'etd', 'eta', 'coaReq', 'coaCheck', 'labelCheck', 'shippingDoc', 'arrivalNotice', 'Customer', 'mfgBatch', 'nuraBatch', 'shipperQualified', 'qualificationNote', 'qcRelease', 'needNuraCoa', 'mfg', 'lotNuraCoa'],
+                    visible: ['transport', 'priceBeforeNeg', 'priceAfterNeg', 'etd', 'eta', 'coaReq', 'coaCheck', 'labelCheck', 'shippingDoc', 'arrivalNotice', 'Customer', 'mfgBatch', 'nuraBatch', 'shipperQualified', 'qualificationNote', 'qcRelease', 'needNuraCoa', 'mfg', 'lotNuraCoa', 'fdaReleased'],
                     visible_col_type: {
                         'etd': 'date',
                         'eta': 'date',
                         'lotNuraCoa': 'lotNuraCoaSelect',
-                        'transport': 'transportSelect'
+                        'transport': 'transportSelect',
+                        'fdaReleased': 'fdaReleasedSelect'
                     },
                     customHtmlForInput: {
                         "lotNuraCoaSelect": `<select class="form-control" id="m_{}" name="{}">
@@ -199,12 +200,17 @@
                                                 <option value="No">No</option>
                                              </select>`,
                         "transportSelect": `<select class="form-control" id="m_{}" name="{}">
-                                        <option value=""></option>
-                                        <option value="Oversea/Sea">Oversea/Sea</option>
-                                        <option value="Oversea/Air">Oversea/Air</option>
-                                        <option value="Domestic">Domestic</option>
-                                        <option value="Vendor clear customs">Vendor clear customs</option>
-                                      </select>`
+                                                <option value=""></option>
+                                                <option value="Oversea/Sea">Oversea/Sea</option>
+                                                <option value="Oversea/Air">Oversea/Air</option>
+                                                <option value="Domestic">Domestic</option>
+                                                <option value="Vendor clear customs">Vendor clear customs</option>
+                                            </select>`,
+                        "fdaReleasedSelect": `<select class="form-control" id="m_{}" name="{}">
+                                                <option value=""></option>
+                                                <option value="Yes">Yes</option>
+                                                <option value="No">No</option>
+                                             </select>`
                     },
                     params: {}
                 }),

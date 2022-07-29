@@ -312,8 +312,11 @@ soitem_poitem_map_base_sql = '''
     nura_soitem_poitem_map.statusId as statusId,
     nura_soitem_poitem_map_category.name as category,
     nura_soitem_poitem_map.categoryId as categoryId,
+    nura_soitem_poitem_map.closed,
+    nura_soitem_poitem_map.dueDate,
+    nura_soitem_poitem_map.promiseDate,
     nura_po_item_info.id as poiteminfoid,
-    assist_user.username
+    assist_user.username createuser
     from nura_soitem_poitem_map
     left join soitem on soitem.id = nura_soitem_poitem_map.soitemid
     left join poitem on poitem.id = nura_soitem_poitem_map.poitemid
@@ -335,8 +338,9 @@ soitem_poitem_map_clause_dict = {
     "id": "nura_soitem_poitem_map.id = :{}",
     "statusId": "nura_soitem_poitem_map.statusId = :{}",
     "categoryId": "nura_soitem_poitem_map.categoryId = :{}",
+    "createuser": "assist_user.username like :{}"
 }
-soitem_poitem_map_wildcard_fields = set(["description","productnum","salesman","customerpo"])
+soitem_poitem_map_wildcard_fields = set(["description","productnum","salesman","customerpo", "createuser"])
 soitem_poitem_map_required_args = set([])
 
 soitem_poitem_map_detail_base_sql = '''SELECT nura_soitem_poitem_map_detail.id as mapid, userid, username, content, nura_soitem_poitem_map_detail.created FROM nura_soitem_poitem_map_detail
